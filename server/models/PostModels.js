@@ -5,10 +5,12 @@ const postSchema = new mongoose.Schema({
   content: {type: String, trim: true},
   media: {type: String, required: true},
   likes: [{type: mongoose.Schema.Types.ObjectId,ref: 'User'}],
-  comments: [{user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'}, content: String,createdAt: {type: Date, default: Date.now}
+  comments: [{
+    user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    content: String,
+    createdAt: {type: Date, default: Date.now}
   }],
   savedBy: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
-  location: {type: String},
   tags: [{type: String, required: true, default: []}],
 }, { timestamps: true });
 

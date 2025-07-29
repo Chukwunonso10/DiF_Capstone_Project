@@ -1,8 +1,7 @@
-// src/components/common/Input.tsx
 import React from "react";
 
 type InputProps = {
-  variant?: string; // optional custom prop
+  variant?: string;
 } & React.InputHTMLAttributes<HTMLInputElement>;
 
 const Input: React.FC<InputProps> = ({

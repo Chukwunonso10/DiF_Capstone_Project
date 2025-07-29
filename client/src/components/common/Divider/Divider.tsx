@@ -1,4 +1,3 @@
-// src/components/common/Divider.tsx
 import React from "react";
 
 const Divider = () => (

@@ -1,4 +1,3 @@
-// src/components/layout/BottomBar.tsx
 import React from "react";
 
 const BottomBar = () => (

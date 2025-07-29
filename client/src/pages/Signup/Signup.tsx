@@ -5,6 +5,7 @@ import FacebookSignup from "../../components/auth/FacebookSignup";
 import Divider from "../../components/common/Divider";
 import BottomBar from "../../components/common/BottomBar";
 import logo from "../../assets/images/logo.png";
+import { Link } from "react-router-dom";
 
 const SignupPage = () => {
   return (
@@ -26,13 +27,15 @@ const SignupPage = () => {
 
         <SignupForm />
         <div className="mt-8">
-          <FacebookSignup />
+          <FacebookSignup text="Sign up with Facebook" />
         </div>
         <Divider />
 
         <div className="text-center mt-8">
           <span className="text-gray-600">Already have an account? </span>
-          <button className="text-blue-500 font-semibold">Log in</button>
+          <Link to="/login" className="text-blue-500 font-semibold">
+            Log in
+          </Link>
         </div>
       </div>
 

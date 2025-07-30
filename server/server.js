@@ -1,9 +1,15 @@
 const express = require('express')
 const mongoose = require('mongoose')
-const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv')
-const bcrypt = require('bcrypt')
 const cors = require('cors')
+const connectDB = require('./config/db')
+
+//import routes
+const authRoute = require('./routes/authRoute')
+
+
+dotenv.config()
+connectDB()
 
 const app = express()
 
@@ -12,10 +18,10 @@ app.use(express.urlencoded({extended: true}))
 app.use(cors())
 
 
-
-
-
-
+app.use('/api/auth', authRoute)
+// app.use('/',(req, res)=>{
+//     res.status(200).send("Hello welcome to our page")
+// })
 
 
 

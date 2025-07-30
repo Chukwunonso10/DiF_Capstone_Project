@@ -1,15 +1,45 @@
 import React from "react";
+import { cn } from "../../../utils/cn";
 
-const Button = ({
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "sm" | "md" | "lg";
+  children: React.ReactNode;
+}
+
+const Button: React.FC<ButtonProps> = ({
+  variant = "primary",
+  size = "md",
+  className,
   children,
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
-  <button
-    {...props}
-    className="w-full bg-blue-500 text-white py-3 rounded-md font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
-  >
-    {children}
-  </button>
-);
+}) => {
+  const baseClasses =
+    "inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
+
+  const variants = {
+    primary: "bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500",
+    secondary:
+      "bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500",
+    outline:
+      "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 focus:ring-gray-500",
+    ghost: "text-gray-700 hover:bg-gray-100 focus:ring-gray-500",
+  };
+
+  const sizes = {
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2 text-sm",
+    lg: "px-6 py-3 text-base",
+  };
+
+  return (
+    <button
+      className={cn(baseClasses, variants[variant], sizes[size], className)}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
 
 export default Button;

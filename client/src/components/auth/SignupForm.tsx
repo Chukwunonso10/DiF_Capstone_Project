@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Input from "../../common/Input";
-import Button from "../../common/Button";
-import { useAuth, useFormValidation } from "../../../hooks/useAuth";
-import type { SignupFormData, FormErrors } from "../../../types/authTypes";
+import Input from "../common/Input";
+import Button from "../common/Button";
+import { useAuth, useFormValidation } from "../../hooks/useAuth";
+import type { SignupFormData, FormErrors } from "../../types/authTypes";
 
 const SignupForm: React.FC = () => {
   const navigate = useNavigate();

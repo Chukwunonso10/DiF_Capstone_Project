@@ -14,7 +14,7 @@ interface StoryHighlightsProps {
   onHighlightClick?: (highlight: StoryHighlight) => void;
 }
 
-const ProfileHighlights: React.FC<StoryHighlightsProps> = ({
+const StoryHighlights: React.FC<StoryHighlightsProps> = ({
   highlights,
   canAddNew = false,
   onAddNew,
@@ -55,4 +55,4 @@ const ProfileHighlights: React.FC<StoryHighlightsProps> = ({
   );
 };
 
-export default ProfileHighlights;
+export default StoryHighlights;

@@ -1,0 +1,127 @@
+import { useState } from "react";
+import { authService } from "../services/api/authService";
+import {
+  type LoginFormData,
+  type SignupFormData,
+  type FormErrors,
+  VALIDATION_RULES,
+} from "../types/authTypes";
+
+export const useFormValidation = () => {
+  const validateField = (name: string, value: string): string => {
+    const rules = VALIDATION_RULES[name as keyof typeof VALIDATION_RULES];
+    if (!rules) return "";
+
+    if (rules.required && !value.trim()) {
+      return rules.required;
+    }
+
+    if ("minLength" in rules && value.length < rules.minLength.value) {
+      return rules.minLength.message;
+    }
+
+    if ("pattern" in rules && !rules.pattern.value.test(value)) {
+      return rules.pattern.message;
+    }
+
+    return "";
+  };
+
+  const validateForm = (formData: { [key: string]: string }): FormErrors => {
+    const errors: FormErrors = {};
+
+    Object.keys(formData).forEach((key) => {
+      const error = validateField(key, formData[key]);
+      if (error) {
+        errors[key] = error;
+      }
+    });
+
+    return errors;
+  };
+
+  return { validateField, validateForm };
+};
+
+export const useAuth = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const login = async (formData: LoginFormData) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await authService.login({
+        email: formData.usernameOrEmail,
+        password: formData.password,
+      });
+
+      if (response.success && response.data) {
+        localStorage.setItem("authToken", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        return { success: true, user: response.data.user };
+      } else {
+        setError(response.message || "Login failed");
+        return { success: false, error: response.message };
+      }
+    } catch {
+      const errorMessage = "Network error. Please try again.";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (formData: SignupFormData) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await authService.register(formData);
+
+      if (response.success && response.data) {
+        localStorage.setItem("authToken", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        return { success: true, user: response.data.user };
+      } else {
+        setError(response.message || "Registration failed");
+        return { success: false, error: response.message };
+      }
+    } catch {
+      const errorMessage = "Network error. Please try again.";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+  };
+
+  const getCurrentUser = () => {
+    const userStr = localStorage.getItem("user");
+    return userStr ? JSON.parse(userStr) : null;
+  };
+
+  const isAuthenticated = () => {
+    return !!localStorage.getItem("authToken");
+  };
+
+  return {
+    login,
+    register,
+    logout,
+    getCurrentUser,
+    isAuthenticated,
+    isLoading,
+    error,
+    clearError: () => setError(null),
+  };
+};

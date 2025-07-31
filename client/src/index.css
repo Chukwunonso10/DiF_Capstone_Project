@@ -1,9 +1,79 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
+@import "swiper/css";
+@import "swiper/css/navigation";
+@import "swiper/css/pagination";
 
+@import url("https://fonts.googleapis.com/css2?family=Lobster&display=swap");
 
-@import 'swiper/css';
-@import 'swiper/css/navigation';
-@import 'swiper/css/pagination';
+/* @font-face {
+  font-family: "Billabong";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/Billabong.woff")
+    format("woff");
+  font-weight: normal;
+  font-style: normal;
+} */
+
+.App {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #fafafa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.main-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 1024px) {
+  .main-content {
+    max-width: 975px;
+    margin: 0 auto;
+  }
+
+  .profile-container {
+    max-width: 935px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 1023px) {
+  .main-content {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Grand+Hotel&display=swap");
+
+.instagram-logo {
+  font-family: "Grand Hotel", cursive;
+  font-size: 2rem;
+  font-weight: normal;
+}

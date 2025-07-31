@@ -1,21 +1,75 @@
+import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "./pages/Login/Login";
-import SignupPage from "./pages/Signup/Signup";
+import { useAuth } from "./hooks/useAuth";
+import Login from "./pages/Login/Login";
+import Signup from "./pages/Signup";
 import Home from "./pages/Home/Home";
-import Profile from "./pages/Profile";
+import Profile from "./pages/Profile/Profile";
 
-function App() {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated() ? <>{children}</> : <Navigate to="/login" replace />;
+};
+
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  return !isAuthenticated() ? <>{children}</> : <Navigate to="/" replace />;
+};
+
+const App: React.FC = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/home" replace />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/profile/:username" element={<Profile />} />
-    </Routes>
+    <div className="App">
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <PublicRoute>
+              <Signup />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <PublicRoute>
+              <Profile />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/profile/:username"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </div>
   );
-}
+};
 
 export default App;
 

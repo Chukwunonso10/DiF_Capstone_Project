@@ -13,5 +13,5 @@ const FacebookSignup = ({
     <span>{text}</span>
   </button>
 );
--
+
 export default FacebookSignup;

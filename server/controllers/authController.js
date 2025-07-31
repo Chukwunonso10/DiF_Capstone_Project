@@ -16,7 +16,7 @@ const createUser = async (req, res) => {
       return res.status(400).json({ message: "Provide either email or phone number, not both" })
     }
 
-    // Validate email format if provided
+    // Validate email format if provided 
     if (email && !/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
       return res.status(400).json({ message: "Please enter a valid email address" })
     }
@@ -77,7 +77,9 @@ const createUser = async (req, res) => {
 
     
     // Generate JWT token
-    const token = jwt.sign({userId: newUser._id, fullName:newUser.fullName, ...(email && {email: newUser.email}), ...(phoneNumber && {phoneNumber: newUser.phoneNumber})}, JWT_SECRET, {expiresIn: "1hr"})
+    const token = jwt.sign({userId: newUser._id, fullName:newUser.fullName, 
+      ...(email && {email: newUser.email}), ...(phoneNumber && {phoneNumber: newUser.phoneNumber})}, 
+     process.env.JWT_SECRET, {expiresIn: "1hr"})
 
 
     // Return success response (exclude password)

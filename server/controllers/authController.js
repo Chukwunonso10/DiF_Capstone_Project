@@ -186,7 +186,67 @@ const login = async (req, res) => {
   }
 }
 
+
+const getAllUsers = async (req, res)=>{
+  const { page=1, limit=10, search } = req.query;
+  try {
+    const skip = (page - 1) * limit
+    let query = {}
+    if (search){
+      query = {
+        $or: [{userName: {$regex: search, $options: 'i'}}, {fullName: {$regex: search, $options: "i"}}]
+    }
+  }
+    const users = await User.find(query)
+                      .select("-password")
+                      .skip(skip)
+                      .limit(parseInt(limit))
+                      .sort({createdAt: -1})
+
+    const total = await User.countDocuments(query)
+    if (users.length == 0) return res.status(200).json({ message: "No User Found!", users:[],
+                    pagination:{page, limit, total, pages:0}
+    })
+    res.status(200).json({
+      success: true,
+      users,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total/limit)
+    }
+  })
+  } catch (error) {
+    console.error("Error getting users:" + error.message)
+    res.status(500).json({ message: "internal server error"})
+  }
+}
+
+const getSingleUser = async (req, res) =>{
+  try {
+    const { identifier } = req.params;
+  
+    let user;
+    if (identifier.match(/^[0-9a-fA-F]{24}$/)){
+      user = await User.findById(identifier).select("-password")
+    }else{
+      user = await User.findOne({
+        $or: [{userName: identifier.toLowerCase()}, {fullName: identifier.toLowerCase()}]
+      }).select("-password")
+    }
+
+    if (!user) return res.status(404).json({ message: "User Not found "})
+    res.status(200).json(user)
+  } catch (error) {
+    console.error("error retrieving user",error.message)
+    res.status(500).json({message: "internal server error"})
+  }
+}
+
 module.exports = {
   createUser,
   login,
+  getAllUsers,
+  getSingleUser
 }

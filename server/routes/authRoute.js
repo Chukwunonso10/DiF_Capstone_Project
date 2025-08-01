@@ -7,5 +7,9 @@ const { createUser, login, getAllUsers, getSingleUser } = require('../controller
 router.post('/register', createUser)
 router.post('/login', login)
 
+//authenticated routes
+router.get('/getall', getAllUsers)
+router.get('/getme/:identifier', getSingleUser)
+
 
 module.exports = router;

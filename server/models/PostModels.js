@@ -11,7 +11,7 @@ const postSchema = new mongoose.Schema({
     createdAt: {type: Date, default: Date.now}
   }],
   savedBy: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
-  tags: [{type: String, required: true, default: []}],
+  tags: [{type: String, trim:true}],
 }, { timestamps: true });
 
 

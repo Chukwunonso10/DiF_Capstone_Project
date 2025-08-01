@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { authService } from "../services/api/authService";
+import { useAuthContext } from "../context/AuthContext";
 import {
   type LoginFormData,
   type SignupFormData,
@@ -46,27 +47,28 @@ export const useFormValidation = () => {
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated, setUser, setIsAuthenticated } = useAuthContext();
 
   const login = async (formData: LoginFormData) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Debug logging
-      console.log("Login form data:", formData);
-
-      const loginData = {
-        emailOrPhone: formData.usernameOrEmail, // Transform to match backend
-        password: formData.password,
-      };
-
-      console.log("Login request data:", loginData);
-
-      const response = await authService.login(loginData);
+      const response = await authService.login(
+        formData.usernameOrEmail,
+        formData.password
+      );
 
       if (response.success && response.data) {
         localStorage.setItem("authToken", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        setUser({
+          ...response.data.user,
+          username: response.data.user.userName,
+        });
+
+        setIsAuthenticated(true);
 
         return { success: true, user: response.data.user };
       } else {
@@ -75,9 +77,8 @@ export const useAuth = () => {
       }
     } catch (error) {
       console.error("Login error:", error);
-      const errorMessage = "Network error. Please try again.";
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+      setError("Network error. Please try again.");
+      return { success: false, error: "Network error. Please try again." };
     } finally {
       setIsLoading(false);
     }
@@ -88,20 +89,14 @@ export const useAuth = () => {
     setError(null);
 
     try {
-      // Transform frontend data to match backend expectations
       const backendData = {
         fullName: formData.fullName,
-        userName: formData.username, // Transform username -> userName
+        userName: formData.username,
         password: formData.password,
-        // Determine if it's email or phone number
         ...(formData.email.includes("@")
           ? { email: formData.email }
           : { phoneNumber: formData.email }),
       };
-
-      // Debug logging
-      console.log("Frontend form data:", formData);
-      console.log("Transformed backend data:", backendData);
 
       const response = await authService.register(backendData);
 
@@ -109,15 +104,21 @@ export const useAuth = () => {
         localStorage.setItem("authToken", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
+        setUser({
+          ...response.data.user,
+          username: response.data.user.userName,
+        });
+
+        setIsAuthenticated(true);
+
         return { success: true, user: response.data.user };
       } else {
         setError(response.message || "Registration failed");
         return { success: false, error: response.message };
       }
     } catch {
-      const errorMessage = "Network error. Please try again.";
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+      setError("Network error. Please try again.");
+      return { success: false, error: "Network error. Please try again." };
     } finally {
       setIsLoading(false);
     }
@@ -126,6 +127,7 @@ export const useAuth = () => {
   const logout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
+    setIsAuthenticated(false);
   };
 
   const getCurrentUser = () => {
@@ -133,7 +135,7 @@ export const useAuth = () => {
     return userStr ? JSON.parse(userStr) : null;
   };
 
-  const isAuthenticated = () => {
+  const checkIsAuthenticated = () => {
     return !!localStorage.getItem("authToken");
   };
 
@@ -144,9 +146,10 @@ export const useAuth = () => {
     register,
     logout,
     getCurrentUser,
-    isAuthenticated,
+    checkIsAuthenticated,
     isLoading,
     error,
     clearError,
+    isAuthenticated,
   };
 };

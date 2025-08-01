@@ -1,4 +1,3 @@
-// src/components/common/MobileBottomNav.tsx
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -16,7 +15,6 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Determine active item based on current route if not explicitly provided
   const getActiveItem = () => {
     if (activeItem) return activeItem;
 
@@ -31,12 +29,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const currentActiveItem = getActiveItem();
 
   const handleItemClick = (itemId: string) => {
-    // Call the provided onItemClick if it exists
     if (onItemClick) {
       onItemClick(itemId);
     }
 
-    // Handle navigation
     switch (itemId) {
       case "home":
         navigate("/");

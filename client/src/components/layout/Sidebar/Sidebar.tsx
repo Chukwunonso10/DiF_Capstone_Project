@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import SearchSidebar from "../../common/SearchSidebar";
 
 interface SidebarProps {
@@ -15,11 +16,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   userAvatar = "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
 }) => {
   const [showSearchSidebar, setShowSearchSidebar] = useState(false);
+  const location = useLocation();
 
   const menuItems = [
     {
       id: "home",
       label: "Home",
+      path: "/",
       icon: (
         <svg
           className="w-7 h-7"
@@ -39,6 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "search",
       label: "Search",
+      path: "#",
       icon: (
         <svg
           className="w-7 h-7"
@@ -58,6 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "explore",
       label: "Explore",
+      path: "/explore",
       icon: (
         <svg
           className="w-7 h-7"
@@ -77,6 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "reels",
       label: "Reels",
+      path: "/reels",
       icon: (
         <svg
           className="w-7 h-7"
@@ -96,6 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "messages",
       label: "Messages",
+      path: "/messages",
       icon: (
         <div className="relative">
           <svg
@@ -120,6 +127,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "notifications",
       label: "Notifications",
+      path: "/notifications",
       icon: (
         <div className="relative">
           <svg
@@ -142,6 +150,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "create",
       label: "Create",
+      path: "/create",
       icon: (
         <svg
           className="w-7 h-7"
@@ -161,6 +170,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "profile",
       label: "Profile",
+      path: "/profile",
       icon: (
         <div className="w-7 h-7 rounded-full overflow-hidden">
           <img
@@ -177,6 +187,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "meta-ai",
       label: "Meta AI",
+      path: "/meta-ai",
       icon: (
         <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
           <circle
@@ -194,6 +205,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "ai-studio",
       label: "AI Studio",
+      path: "/ai-studio",
       icon: (
         <svg
           className="w-7 h-7"
@@ -213,6 +225,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "threads",
       label: "Threads",
+      path: "/threads",
       icon: (
         <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.5 12.01 1.5 4.977 5.226 3.174 8.81 3.174c1.938 0 3.329.554 4.132 1.644.35.474.394 1.137.108 1.644l-.394.394c-.474.394-1.204.394-1.678 0-.157-.236-.394-.394-.631-.552-.631-.315-1.441-.315-2.152-.315-2.231 0-4.461 1.204-4.461 7.143 0 5.939 2.23 7.064 4.461 7.064 1.598 0 2.546-.552 2.94-1.762.157-.473.394-.788.71-.946.552-.236 1.204-.079 1.598.394.236.315.315.631.236 1.046-.631 2.467-2.15 3.828-4.539 3.907z" />
@@ -222,6 +235,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "more",
       label: "More",
+      path: "/more",
       icon: (
         <svg
           className="w-7 h-7"
@@ -240,10 +254,12 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
   ];
 
-  const handleItemClick = (itemId: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleItemClick = (itemId: string, path: string) => {
     if (itemId === "search") {
-      setShowSearchSidebar(true);
+      setShowSearchSidebar(!showSearchSidebar);
     } else {
+      setShowSearchSidebar(false);
       onItemClick?.(itemId);
     }
   };
@@ -252,18 +268,35 @@ const Sidebar: React.FC<SidebarProps> = ({
     setShowSearchSidebar(false);
   };
 
+  const getIsActive = (itemId: string, path?: string) => {
+    if (activeItem) {
+      return activeItem === itemId;
+    }
+    if (path && path !== "#") {
+      return location.pathname === path;
+    }
+    if (itemId === "search") {
+      return showSearchSidebar;
+    }
+    return false;
+  };
+
+  const sidebarCollapsed = showSearchSidebar || isCollapsed;
+
   return (
     <div className="flex">
       <aside
-        className={`hidden lg:flex flex-col bg-white border-r border-gray-200 h-screen sticky top-0 transition-all duration-300 ${
-          isCollapsed ? "w-20" : "w-80"
+        className={`hidden lg:flex flex-col bg-white border-r border-gray-200 h-screen sticky top-0 transition-all duration-300 shadow-lg ${
+          sidebarCollapsed ? "w-20" : "w-80"
         }`}
       >
         <div className="p-8 border-b border-gray-200">
-          {isCollapsed ? (
-            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-            </svg>
+          {sidebarCollapsed ? (
+            <div className="flex justify-center">
+              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+              </svg>
+            </div>
           ) : (
             <h1
               className="text-3xl font-normal"
@@ -277,27 +310,52 @@ const Sidebar: React.FC<SidebarProps> = ({
         <nav className="flex-1 py-8">
           <ul className="space-y-2">
             {menuItems.map((item) => {
-              const isActive = activeItem === item.id;
+              const isActive = getIsActive(item.id, item.path);
+
+              if (item.id === "search") {
+                return (
+                  <li key={item.id}>
+                    <button
+                      onClick={() => handleItemClick(item.id, item.path)}
+                      className={`w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-all duration-200 rounded-lg mx-4 ${
+                        isActive ? "font-bold bg-gray-50" : "font-normal"
+                      }`}
+                    >
+                      <div
+                        className={`flex-shrink-0 transition-transform duration-200 ${
+                          isActive ? "scale-110" : ""
+                        }`}
+                      >
+                        {item.icon}
+                      </div>
+                      {!sidebarCollapsed && (
+                        <span className="text-lg">{item.label}</span>
+                      )}
+                    </button>
+                  </li>
+                );
+              }
 
               return (
                 <li key={item.id}>
-                  <button
-                    onClick={() => handleItemClick(item.id)}
-                    className={`w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-colors rounded-lg mx-4 ${
+                  <Link
+                    to={item.path}
+                    onClick={() => handleItemClick(item.id, item.path)}
+                    className={`w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-all duration-200 rounded-lg mx-4 ${
                       isActive ? "font-bold bg-gray-50" : "font-normal"
                     }`}
                   >
                     <div
-                      className={`flex-shrink-0 ${
+                      className={`flex-shrink-0 transition-transform duration-200 ${
                         isActive ? "scale-110" : ""
-                      } transition-transform`}
+                      }`}
                     >
                       {item.icon}
                     </div>
-                    {!isCollapsed && (
+                    {!sidebarCollapsed && (
                       <span className="text-lg">{item.label}</span>
                     )}
-                  </button>
+                  </Link>
                 </li>
               );
             })}
@@ -307,21 +365,28 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="py-4 border-t border-gray-200">
           <ul className="space-y-2">
             {bottomItems.map((item) => {
-              const isActive = activeItem === item.id;
+              const isActive = getIsActive(item.id, item.path);
 
               return (
                 <li key={item.id}>
-                  <button
-                    onClick={() => handleItemClick(item.id)}
-                    className={`w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-colors rounded-lg mx-4 ${
+                  <Link
+                    to={item.path}
+                    onClick={() => handleItemClick(item.id, item.path)}
+                    className={`w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-all duration-200 rounded-lg mx-4 ${
                       isActive ? "font-bold bg-gray-50" : "font-normal"
                     }`}
                   >
-                    <div className="flex-shrink-0">{item.icon}</div>
-                    {!isCollapsed && (
+                    <div
+                      className={`flex-shrink-0 transition-transform duration-200 ${
+                        isActive ? "scale-110" : ""
+                      }`}
+                    >
+                      {item.icon}
+                    </div>
+                    {!sidebarCollapsed && (
                       <span className="text-lg">{item.label}</span>
                     )}
-                  </button>
+                  </Link>
                 </li>
               );
             })}
@@ -329,7 +394,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </aside>
 
-      {/* Search Sidebar */}
       <SearchSidebar
         isOpen={showSearchSidebar}
         onClose={handleCloseSearchSidebar}

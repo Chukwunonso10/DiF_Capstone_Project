@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Search } from "lucide-react";
 
 interface SearchSidebarProps {
@@ -18,7 +18,6 @@ interface SearchResult {
 const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Mock search results
   const recentSearches: SearchResult[] = [
     {
       id: "1",
@@ -30,6 +29,31 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
       followers: "2,613 followers",
     },
   ];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      const searchSidebar = document.getElementById("search-sidebar");
+      const mainSidebar = document.querySelector("aside");
+
+      if (
+        isOpen &&
+        searchSidebar &&
+        !searchSidebar.contains(target) &&
+        !mainSidebar?.contains(target)
+      ) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose]);
 
   const handleClearAll = () => {
     // Logic to clear all recent searches
@@ -46,28 +70,24 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
     onClose();
   };
 
+  if (!isOpen) return null;
+
   return (
     <>
-      {/* Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Sidebar */}
       <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+        onClick={onClose}
+      />
+
+      <div
+        id="search-sidebar"
         className={`
-        fixed top-0 left-0 h-full bg-white shadow-xl z-50 transition-transform duration-300 ease-in-out
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        w-full max-w-sm lg:max-w-md lg:relative lg:translate-x-0 lg:shadow-none lg:border-r lg:border-gray-200
-        ${isOpen ? "lg:block" : "lg:hidden"}
-      `}
+          fixed top-0 left-20 h-full bg-white shadow-2xl z-50 transition-transform duration-300 ease-in-out
+          w-96 lg:relative lg:left-0 lg:translate-x-0 lg:shadow-xl lg:border-r lg:border-gray-200
+        `}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold">Search</h2>
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 className="text-2xl font-semibold">Search</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors lg:hidden"
@@ -76,8 +96,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Search Input */}
-        <div className="p-4">
+        <div className="p-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -85,16 +104,15 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg border-none outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-xl border-none outline-none focus:ring-2 focus:ring-blue-500 text-base"
             />
           </div>
         </div>
 
-        {/* Recent Searches */}
         <div className="flex-1 overflow-y-auto">
-          <div className="px-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-gray-900">Recent</h3>
+          <div className="px-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Recent</h3>
               <button
                 onClick={handleClearAll}
                 className="text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors"
@@ -104,14 +122,14 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
             </div>
 
             {recentSearches.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {recentSearches.map((result) => (
                   <div
                     key={result.id}
-                    className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer group"
+                    className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl cursor-pointer group transition-colors"
                     onClick={() => handleSearchResultClick(result)}
                   >
-                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
                       <img
                         src={result.avatar}
                         alt={result.username}
@@ -120,7 +138,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1">
-                        <span className="font-medium text-sm text-gray-900 truncate">
+                        <span className="font-semibold text-base text-gray-900 truncate">
                           {result.username}
                         </span>
                         {result.verified && (
@@ -133,7 +151,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
                           </svg>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="text-sm text-gray-500 truncate">
                         {result.displayName} • {result.followers}
                       </p>
                     </div>
@@ -142,7 +160,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
                         e.stopPropagation();
                         handleRemoveSearch(result.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded-full transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-2 hover:bg-gray-200 rounded-full transition-all"
                     >
                       <X className="w-4 h-4 text-gray-400" />
                     </button>
@@ -150,11 +168,11 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                  <Search className="w-8 h-8 text-gray-400" />
+              <div className="text-center py-12">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                  <Search className="w-10 h-10 text-gray-400" />
                 </div>
-                <p className="text-gray-500 text-sm">No recent searches</p>
+                <p className="text-gray-500 text-base">No recent searches</p>
               </div>
             )}
           </div>

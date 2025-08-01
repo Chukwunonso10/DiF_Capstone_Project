@@ -31,7 +31,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
       path: "/explore",
       id: "search",
       isActive: activeItem === "search" || location.pathname === "/explore",
-      isButton: true, // This will be handled as a button instead of a link
+      isButton: true,
     },
     {
       icon: PlusSquare,
@@ -64,7 +64,6 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
         {navItems.map((item, index) => {
           const IconComponent = item.icon;
 
-          // Handle search button specially
           if (item.isButton) {
             return (
               <button
@@ -81,7 +80,6 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
             );
           }
 
-          // Handle profile with avatar
           if (item.id === "profile") {
             return (
               <Link
@@ -105,7 +103,6 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
             );
           }
 
-          // Handle regular navigation items
           return (
             <Link
               key={index}

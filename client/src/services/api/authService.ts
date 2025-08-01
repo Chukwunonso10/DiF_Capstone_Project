@@ -1,7 +1,8 @@
 const API_BASE_URL = "https://dif-capstone-project-backend.onrender.com";
 
 export interface LoginRequest {
-  emailOrPhone: string;
+  email?: string;
+  phoneNumber?: string;
   password: string;
 }
 
@@ -39,7 +40,6 @@ export class AuthService {
       const requestUrl = `${API_BASE_URL}${endpoint}`;
       const requestBody = body ? JSON.stringify(body) : undefined;
 
-      // Debug logging
       console.log("Making request to:", requestUrl);
       console.log("Request body:", requestBody);
 
@@ -53,7 +53,6 @@ export class AuthService {
 
       const data = await response.json();
 
-      // Debug logging
       console.log("Response status:", response.status);
       console.log("Response data:", data);
 
@@ -80,8 +79,16 @@ export class AuthService {
     }
   }
 
-  async login(credentials: LoginRequest): Promise<AuthResponse> {
-    return this.makeRequest("/api/auth/login", "POST", credentials);
+  async login(emailOrPhone: string, password: string): Promise<AuthResponse> {
+    const loginData: LoginRequest = {
+      password,
+      ...(emailOrPhone.includes("@")
+        ? { email: emailOrPhone }
+        : { phoneNumber: emailOrPhone }),
+    };
+
+    console.log("Transformed login data:", loginData);
+    return this.makeRequest("/api/auth/login", "POST", loginData);
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {

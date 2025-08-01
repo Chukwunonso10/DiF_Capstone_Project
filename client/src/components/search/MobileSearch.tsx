@@ -18,7 +18,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
-  // Mock search results
   const recentSearches: SearchResult[] = [
     {
       id: "1",
@@ -31,7 +30,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
     },
   ];
 
-  // Mock search results for when user is actively searching
   const searchResults: SearchResult[] = [
     {
       id: "2",
@@ -70,7 +68,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
 
   return (
     <div className="h-full bg-white">
-      {/* Header */}
       <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 z-10">
         <div className="flex items-center gap-3">
           <button
@@ -93,7 +90,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
         </div>
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {!isSearching && (
           <div className="px-4 py-4">

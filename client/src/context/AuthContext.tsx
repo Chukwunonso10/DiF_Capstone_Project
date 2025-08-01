@@ -30,7 +30,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Check if user is logged in on app start
     const checkAuthStatus = () => {
       try {
         const token = localStorage.getItem("authToken");
@@ -43,7 +42,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error("Error checking auth status:", error);
-        // Clear invalid data
+
         localStorage.removeItem("authToken");
         localStorage.removeItem("user");
       } finally {

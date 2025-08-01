@@ -62,7 +62,6 @@ const Home: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-md mx-auto lg:max-w-lg">
-        {/* Welcome Message */}
         <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
             Welcome back, {user?.fullName || "User"}!
@@ -70,12 +69,10 @@ const Home: React.FC = () => {
           <p className="text-sm text-gray-600">@{user?.userName}</p>
         </div>
 
-        {/* Stories */}
         <div className="lg:mb-6">
           <Stories />
         </div>
 
-        {/* Posts Feed */}
         <div className="space-y-0 lg:space-y-6">
           {posts.map((post) => (
             <Post key={post.id} {...post} />

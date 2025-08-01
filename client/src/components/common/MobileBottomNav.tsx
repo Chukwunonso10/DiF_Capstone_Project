@@ -145,7 +145,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   return (
     <>
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-black px-0 py-2 z-50">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white px-0 py-2 z-50 border-t border-gray-200">
         <div className="flex justify-between items-center px-4">
           {navItems.map((item) => {
             const isActive = currentActiveItem === item.id;
@@ -155,7 +155,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 key={item.id}
                 onClick={() => handleItemClick(item.id)}
                 className={`p-3 rounded-lg transition-colors ${
-                  isActive ? "text-white" : "text-gray-400 hover:text-white"
+                  isActive ? "text-black" : "text-gray-400 hover:text-black"
                 }`}
               >
                 {item.icon}

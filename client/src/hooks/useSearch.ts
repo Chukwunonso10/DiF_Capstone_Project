@@ -1,5 +1,5 @@
 // src/hooks/useSearch.ts
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { userService, type ApiUser } from "../services/api/userService";
 
 interface SearchState {
@@ -18,7 +18,6 @@ interface RecentSearch {
   timestamp: number;
 }
 
-const RECENT_SEARCHES_KEY = "instagram_recent_searches";
 const MAX_RECENT_SEARCHES = 10;
 
 export const useSearch = () => {
@@ -30,26 +29,8 @@ export const useSearch = () => {
     hasSearched: false,
   });
 
+  // Store recent searches in memory (instead of localStorage)
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
-
-  // Load recent searches from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem(RECENT_SEARCHES_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setRecentSearches(parsed);
-      } catch (error) {
-        console.error("Error loading recent searches:", error);
-      }
-    }
-  }, []);
-
-  // Save recent searches to localStorage
-  const saveRecentSearches = useCallback((searches: RecentSearch[]) => {
-    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(searches));
-    setRecentSearches(searches);
-  }, []);
 
   // Fetch all users from API
   const fetchAllUsers = useCallback(async () => {
@@ -107,42 +88,36 @@ export const useSearch = () => {
   );
 
   // Add user to recent searches
-  const addToRecentSearches = useCallback(
-    (user: ApiUser) => {
-      const transformedUser = userService.transformApiUser(user);
+  const addToRecentSearches = useCallback((user: ApiUser) => {
+    const transformedUser = userService.transformApiUser(user);
 
-      const newSearch: RecentSearch = {
-        id: transformedUser.id,
-        username: transformedUser.username,
-        displayName: transformedUser.displayName,
-        avatar: transformedUser.avatar,
-        timestamp: Date.now(),
-      };
+    const newSearch: RecentSearch = {
+      id: transformedUser.id,
+      username: transformedUser.username,
+      displayName: transformedUser.displayName,
+      avatar: transformedUser.avatar,
+      timestamp: Date.now(),
+    };
 
+    setRecentSearches((prev) => {
       const updatedSearches = [
         newSearch,
-        ...recentSearches.filter((search) => search.id !== newSearch.id),
+        ...prev.filter((search) => search.id !== newSearch.id),
       ].slice(0, MAX_RECENT_SEARCHES);
 
-      saveRecentSearches(updatedSearches);
-    },
-    [recentSearches, saveRecentSearches]
-  );
+      return updatedSearches;
+    });
+  }, []);
 
   // Remove specific recent search
-  const removeRecentSearch = useCallback(
-    (searchId: string) => {
-      const updatedSearches = recentSearches.filter(
-        (search) => search.id !== searchId
-      );
-      saveRecentSearches(updatedSearches);
-    },
-    [recentSearches, saveRecentSearches]
-  );
+  const removeRecentSearch = useCallback((searchId: string) => {
+    setRecentSearches((prev) =>
+      prev.filter((search) => search.id !== searchId)
+    );
+  }, []);
 
   // Clear all recent searches
   const clearRecentSearches = useCallback(() => {
-    localStorage.removeItem(RECENT_SEARCHES_KEY);
     setRecentSearches([]);
   }, []);
 
@@ -155,6 +130,7 @@ export const useSearch = () => {
       error: null,
       hasSearched: false,
     });
+    setRecentSearches([]);
   }, []);
 
   return {

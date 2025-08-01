@@ -56,12 +56,10 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
   }, [isOpen, onClose]);
 
   const handleClearAll = () => {
-    // Logic to clear all recent searches
     console.log("Clear all searches");
   };
 
   const handleRemoveSearch = (id: string) => {
-    // Logic to remove specific search
     console.log("Remove search:", id);
   };
 
@@ -70,47 +68,55 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+        className={`fixed inset-0 bg-black transition-opacity duration-300 z-40 lg:hidden ${
+          isOpen ? "bg-opacity-50 visible" : "bg-opacity-0 invisible"
+        }`}
         onClick={onClose}
       />
 
       <div
         id="search-sidebar"
         className={`
-          fixed top-0 left-20 h-full bg-white shadow-2xl z-50 transition-transform duration-300 ease-in-out
-          w-96 lg:relative lg:left-0 lg:translate-x-0 lg:shadow-xl lg:border-r lg:border-gray-200
-        `}
+    fixed top-0 h-full bg-white z-50 transition-all duration-300 ease-out
+    w-[30rem]   /* Wider: about 480px */
+    shadow-lg rounded-r-xl   /* Card-like shadow + rounded edge */
+    ${
+      isOpen
+        ? "left-[5.5rem] translate-x-0 opacity-100"
+        : "left-[5.5rem] -translate-x-full opacity-0 pointer-events-none"
+    }
+    border-l border-gray-200
+  `}
       >
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-semibold">Search</h2>
+        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-200 bg-white shadow-sm">
+          <h2 className="text-2xl font-extrabold text-gray-900">Search</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors lg:hidden"
+            className="p-3 hover:bg-gray-100 rounded-full transition-colors lg:hidden"
+            aria-label="Close search"
           >
-            <X className="w-6 h-6" />
+            <X className="w-6 h-6 text-gray-600" />
           </button>
         </div>
-
-        <div className="p-6">
+        <div className="p-8 bg-white">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search users, hashtags..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-xl border-none outline-none focus:ring-2 focus:ring-blue-500 text-base"
+              className="w-full pl-12 pr-5 py-3 bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-sm placeholder-gray-500"
+              autoFocus={isOpen}
             />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-6">
+        <div className="flex-1 overflow-y-auto bg-white">
+          <div className="px-6 pb-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Recent</h3>
               <button
@@ -122,11 +128,11 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
             </div>
 
             {recentSearches.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {recentSearches.map((result) => (
                   <div
                     key={result.id}
-                    className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl cursor-pointer group transition-colors"
+                    className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer group transition-all duration-200"
                     onClick={() => handleSearchResultClick(result)}
                   >
                     <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
@@ -137,8 +143,8 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1">
-                        <span className="font-semibold text-base text-gray-900 truncate">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-gray-900 truncate">
                           {result.username}
                         </span>
                         {result.verified && (
@@ -160,7 +166,8 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
                         e.stopPropagation();
                         handleRemoveSearch(result.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-2 hover:bg-gray-200 rounded-full transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-2 hover:bg-gray-200 rounded-full transition-all duration-200"
+                      aria-label="Remove search"
                     >
                       <X className="w-4 h-4 text-gray-400" />
                     </button>
@@ -169,10 +176,13 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
               </div>
             ) : (
               <div className="text-center py-12">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                  <Search className="w-10 h-10 text-gray-400" />
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                  <Search className="w-8 h-8 text-gray-400" />
                 </div>
-                <p className="text-gray-500 text-base">No recent searches</p>
+                <p className="text-gray-500 text-sm">No recent searches</p>
+                <p className="text-gray-400 text-xs mt-1">
+                  Search for users, hashtags, and locations
+                </p>
               </div>
             )}
           </div>

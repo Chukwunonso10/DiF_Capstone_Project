@@ -284,13 +284,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   const sidebarCollapsed = showSearchSidebar || isCollapsed;
 
   return (
-    <div className="flex">
+    <>
       <aside
-        className={`hidden lg:flex flex-col bg-white border-r border-gray-200 h-screen sticky top-0 transition-all duration-300 shadow-lg ${
+        className={`hidden lg:flex flex-col bg-white border-r border-gray-200 h-screen fixed top-0 left-0 z-30 transition-all duration-300 ease-out ${
           sidebarCollapsed ? "w-20" : "w-80"
         }`}
       >
-        <div className="p-8 border-b border-gray-200">
+        <div className="p-8 border-b border-gray-200 bg-white">
           {sidebarCollapsed ? (
             <div className="flex justify-center">
               <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
@@ -299,7 +299,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           ) : (
             <h1
-              className="text-3xl font-normal"
+              className="text-3xl font-normal transition-opacity duration-300"
               style={{ fontFamily: "Billabong, cursive" }}
             >
               Instagram
@@ -307,7 +307,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
-        <nav className="flex-1 py-8">
+        <nav className="flex-1 py-8 bg-white overflow-y-auto">
           <ul className="space-y-2">
             {menuItems.map((item) => {
               const isActive = getIsActive(item.id, item.path);
@@ -329,7 +329,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                         {item.icon}
                       </div>
                       {!sidebarCollapsed && (
-                        <span className="text-lg">{item.label}</span>
+                        <span className="text-lg transition-opacity duration-300">
+                          {item.label}
+                        </span>
                       )}
                     </button>
                   </li>
@@ -341,7 +343,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <Link
                     to={item.path}
                     onClick={() => handleItemClick(item.id, item.path)}
-                    className={`w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-all duration-200 rounded-lg mx-4 ${
+                    className={`flex items-center gap-4 px-8 py-3 hover:bg-gray-50 transition-all duration-200 rounded-lg mx-4 ${
                       isActive ? "font-bold bg-gray-50" : "font-normal"
                     }`}
                   >
@@ -353,7 +355,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                       {item.icon}
                     </div>
                     {!sidebarCollapsed && (
-                      <span className="text-lg">{item.label}</span>
+                      <span className="text-lg transition-opacity duration-300">
+                        {item.label}
+                      </span>
                     )}
                   </Link>
                 </li>
@@ -362,7 +366,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           </ul>
         </nav>
 
-        <div className="py-4 border-t border-gray-200">
+        <div className="py-4 border-t border-gray-200 bg-white">
           <ul className="space-y-2">
             {bottomItems.map((item) => {
               const isActive = getIsActive(item.id, item.path);
@@ -372,7 +376,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <Link
                     to={item.path}
                     onClick={() => handleItemClick(item.id, item.path)}
-                    className={`w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-all duration-200 rounded-lg mx-4 ${
+                    className={`flex items-center gap-4 px-8 py-3 hover:bg-gray-50 transition-all duration-200 rounded-lg mx-4 ${
                       isActive ? "font-bold bg-gray-50" : "font-normal"
                     }`}
                   >
@@ -384,7 +388,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                       {item.icon}
                     </div>
                     {!sidebarCollapsed && (
-                      <span className="text-lg">{item.label}</span>
+                      <span className="text-lg transition-opacity duration-300">
+                        {item.label}
+                      </span>
                     )}
                   </Link>
                 </li>
@@ -398,7 +404,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         isOpen={showSearchSidebar}
         onClose={handleCloseSearchSidebar}
       />
-    </div>
+    </>
   );
 };
 

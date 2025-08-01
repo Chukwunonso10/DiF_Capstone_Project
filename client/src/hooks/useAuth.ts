@@ -52,10 +52,17 @@ export const useAuth = () => {
     setError(null);
 
     try {
-      const response = await authService.login({
-        email: formData.usernameOrEmail,
+      // Debug logging
+      console.log("Login form data:", formData);
+
+      const loginData = {
+        emailOrPhone: formData.usernameOrEmail, // Transform to match backend
         password: formData.password,
-      });
+      };
+
+      console.log("Login request data:", loginData);
+
+      const response = await authService.login(loginData);
 
       if (response.success && response.data) {
         localStorage.setItem("authToken", response.data.token);
@@ -66,7 +73,8 @@ export const useAuth = () => {
         setError(response.message || "Login failed");
         return { success: false, error: response.message };
       }
-    } catch {
+    } catch (error) {
+      console.error("Login error:", error);
       const errorMessage = "Network error. Please try again.";
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -80,7 +88,22 @@ export const useAuth = () => {
     setError(null);
 
     try {
-      const response = await authService.register(formData);
+      // Transform frontend data to match backend expectations
+      const backendData = {
+        fullName: formData.fullName,
+        userName: formData.username, // Transform username -> userName
+        password: formData.password,
+        // Determine if it's email or phone number
+        ...(formData.email.includes("@")
+          ? { email: formData.email }
+          : { phoneNumber: formData.email }),
+      };
+
+      // Debug logging
+      console.log("Frontend form data:", formData);
+      console.log("Transformed backend data:", backendData);
+
+      const response = await authService.register(backendData);
 
       if (response.success && response.data) {
         localStorage.setItem("authToken", response.data.token);
@@ -114,6 +137,8 @@ export const useAuth = () => {
     return !!localStorage.getItem("authToken");
   };
 
+  const clearError = () => setError(null);
+
   return {
     login,
     register,
@@ -122,6 +147,6 @@ export const useAuth = () => {
     isAuthenticated,
     isLoading,
     error,
-    clearError: () => setError(null),
+    clearError,
   };
 };

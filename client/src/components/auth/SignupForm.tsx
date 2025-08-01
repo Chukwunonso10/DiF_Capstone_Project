@@ -68,7 +68,7 @@ const SignupForm: React.FC = () => {
 
     const result = await register(formData);
     if (result.success) {
-      navigate("/");
+      navigate("/login");
     }
   };
 
@@ -106,7 +106,7 @@ const SignupForm: React.FC = () => {
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <Input
-          type="email"
+          type="text"
           placeholder="Mobile Number or Email"
           value={formData.email}
           onChange={(value) => handleInputChange("email", value)}

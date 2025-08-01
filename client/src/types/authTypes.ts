@@ -30,10 +30,11 @@ export interface User {
 
 export const VALIDATION_RULES = {
   email: {
-    required: "Email is required",
+    required: "Email or phone number is required",
     pattern: {
-      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-      message: "Please enter a valid email address",
+      // Matches either email OR phone (10-15 digits)
+      value: /^([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|[0-9]{10,15})$/i,
+      message: "Please enter a valid email or phone number",
     },
   },
   password: {

@@ -1,5 +1,8 @@
+import React from "react";
+import Layout from "../../components/Layout";
 import Stories from "../../components/Stories";
 import Post from "../../components/Post";
+import { useAuth } from "../../hooks/useAuth";
 
 const posts = [
   {
@@ -52,20 +55,35 @@ const posts = [
   },
 ];
 
-export default function Home() {
-  return (
-    <div className="max-w-md mx-auto lg:max-w-lg">
-      {/* Stories */}
-      <div className="lg:mb-6">
-        <Stories />
-      </div>
+const Home: React.FC = () => {
+  const { getCurrentUser } = useAuth();
+  const user = getCurrentUser();
 
-      {/* Posts Feed */}
-      <div className="space-y-0 lg:space-y-6">
-        {posts.map((post) => (
-          <Post key={post.id} {...post} />
-        ))}
+  return (
+    <Layout>
+      <div className="max-w-md mx-auto lg:max-w-lg">
+        {/* Welcome Message */}
+        <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Welcome back, {user?.fullName || "User"}!
+          </h2>
+          <p className="text-sm text-gray-600">@{user?.userName}</p>
+        </div>
+
+        {/* Stories */}
+        <div className="lg:mb-6">
+          <Stories />
+        </div>
+
+        {/* Posts Feed */}
+        <div className="space-y-0 lg:space-y-6">
+          {posts.map((post) => (
+            <Post key={post.id} {...post} />
+          ))}
+        </div>
       </div>
-    </div>
+    </Layout>
   );
-}
+};
+
+export default Home;

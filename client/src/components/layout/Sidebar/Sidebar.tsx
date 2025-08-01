@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import SearchSidebar from "../../common/SearchSidebar";
 
 interface SidebarProps {
   activeItem?: string;
@@ -13,6 +14,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed = false,
   userAvatar = "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
 }) => {
+  const [showSearchSidebar, setShowSearchSidebar] = useState(false);
+
   const menuItems = [
     {
       id: "home",
@@ -237,84 +240,101 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
   ];
 
+  const handleItemClick = (itemId: string) => {
+    if (itemId === "search") {
+      setShowSearchSidebar(true);
+    } else {
+      onItemClick?.(itemId);
+    }
+  };
+
+  const handleCloseSearchSidebar = () => {
+    setShowSearchSidebar(false);
+  };
+
   return (
-    <aside
-      className={`hidden lg:flex flex-col bg-white border-r border-gray-200 h-screen sticky top-0 transition-all duration-300 ${
-        isCollapsed ? "w-20" : "w-80"
-      }`}
-    >
-      {/* Logo */}
-      <div className="p-8 border-b border-gray-200">
-        {isCollapsed ? (
-          <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-          </svg>
-        ) : (
-          <h1
-            className="text-3xl font-normal"
-            style={{ fontFamily: "Billabong, cursive" }}
-          >
-            Instagram
-          </h1>
-        )}
-      </div>
+    <div className="flex">
+      <aside
+        className={`hidden lg:flex flex-col bg-white border-r border-gray-200 h-screen sticky top-0 transition-all duration-300 ${
+          isCollapsed ? "w-20" : "w-80"
+        }`}
+      >
+        <div className="p-8 border-b border-gray-200">
+          {isCollapsed ? (
+            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+            </svg>
+          ) : (
+            <h1
+              className="text-3xl font-normal"
+              style={{ fontFamily: "Billabong, cursive" }}
+            >
+              Instagram
+            </h1>
+          )}
+        </div>
 
-      {/* Main Navigation */}
-      <nav className="flex-1 py-8">
-        <ul className="space-y-2">
-          {menuItems.map((item) => {
-            const isActive = activeItem === item.id;
+        <nav className="flex-1 py-8">
+          <ul className="space-y-2">
+            {menuItems.map((item) => {
+              const isActive = activeItem === item.id;
 
-            return (
-              <li key={item.id}>
-                <button
-                  onClick={() => onItemClick?.(item.id)}
-                  className={`w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-colors rounded-lg mx-4 ${
-                    isActive ? "font-bold bg-gray-50" : "font-normal"
-                  }`}
-                >
-                  <div
-                    className={`flex-shrink-0 ${
-                      isActive ? "scale-110" : ""
-                    } transition-transform`}
+              return (
+                <li key={item.id}>
+                  <button
+                    onClick={() => handleItemClick(item.id)}
+                    className={`w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-colors rounded-lg mx-4 ${
+                      isActive ? "font-bold bg-gray-50" : "font-normal"
+                    }`}
                   >
-                    {item.icon}
-                  </div>
-                  {!isCollapsed && (
-                    <span className="text-lg">{item.label}</span>
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+                    <div
+                      className={`flex-shrink-0 ${
+                        isActive ? "scale-110" : ""
+                      } transition-transform`}
+                    >
+                      {item.icon}
+                    </div>
+                    {!isCollapsed && (
+                      <span className="text-lg">{item.label}</span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
-      {/* Bottom Items */}
-      <div className="py-4 border-t border-gray-200">
-        <ul className="space-y-2">
-          {bottomItems.map((item) => {
-            const isActive = activeItem === item.id;
+        <div className="py-4 border-t border-gray-200">
+          <ul className="space-y-2">
+            {bottomItems.map((item) => {
+              const isActive = activeItem === item.id;
 
-            return (
-              <li key={item.id}>
-                <button
-                  onClick={() => onItemClick?.(item.id)}
-                  className={`w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-colors rounded-lg mx-4 ${
-                    isActive ? "font-bold bg-gray-50" : "font-normal"
-                  }`}
-                >
-                  <div className="flex-shrink-0">{item.icon}</div>
-                  {!isCollapsed && (
-                    <span className="text-lg">{item.label}</span>
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </aside>
+              return (
+                <li key={item.id}>
+                  <button
+                    onClick={() => handleItemClick(item.id)}
+                    className={`w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-colors rounded-lg mx-4 ${
+                      isActive ? "font-bold bg-gray-50" : "font-normal"
+                    }`}
+                  >
+                    <div className="flex-shrink-0">{item.icon}</div>
+                    {!isCollapsed && (
+                      <span className="text-lg">{item.label}</span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </aside>
+
+      {/* Search Sidebar */}
+      <SearchSidebar
+        isOpen={showSearchSidebar}
+        onClose={handleCloseSearchSidebar}
+      />
+    </div>
   );
 };
 

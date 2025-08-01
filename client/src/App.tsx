@@ -1,6 +1,6 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "./hooks/useAuth";
+import { AuthProvider, useAuthContext } from "./context/AuthContext";
 import Login from "./pages/Login/Login";
 import Signup from "./pages/Signup";
 import Home from "./pages/Home/Home";
@@ -9,65 +9,73 @@ import Profile from "./pages/Profile/Profile";
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated() ? <>{children}</> : <Navigate to="/login" replace />;
+  const { isAuthenticated } = useAuthContext();
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  return !isAuthenticated() ? <>{children}</> : <Navigate to="/" replace />;
+  const { isAuthenticated } = useAuthContext();
+  return !isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
+};
+
+const AppRoutes: React.FC = () => {
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          <PublicRoute>
+            <Signup />
+          </PublicRoute>
+        }
+      />
+
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/:username"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
 };
 
 const App: React.FC = () => {
   return (
-    <div className="App">
-      <Routes>
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            <PublicRoute>
-              <Signup />
-            </PublicRoute>
-          }
-        />
-
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile"
-          element={
-            <PublicRoute>
-              <Profile />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/profile/:username"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </div>
+    <AuthProvider>
+      <div className="App">
+        <AppRoutes />
+      </div>
+    </AuthProvider>
   );
 };
 

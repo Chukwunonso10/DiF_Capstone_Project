@@ -1,3 +1,4 @@
+// src/App.tsx
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuthContext } from "./context/AuthContext";
@@ -5,6 +6,8 @@ import Login from "./pages/Login/Login";
 import Signup from "./pages/Signup";
 import Home from "./pages/Home/Home";
 import Profile from "./pages/Profile/Profile";
+import Explore from "./pages/Explore/Explore";
+import Search from "./pages/Search/Search";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -43,6 +46,24 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <Home />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/explore"
+        element={
+          <ProtectedRoute>
+            <Explore />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/search"
+        element={
+          <ProtectedRoute>
+            <Search />
           </ProtectedRoute>
         }
       />

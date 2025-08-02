@@ -157,12 +157,12 @@ const Explore: React.FC = () => {
         <div className="lg:hidden h-screen flex flex-col">
           <div className="absolute top-0 left-0 right-0 h-11 bg-gradient-to-b from-black/80 to-transparent z-30 pointer-events-none" />
 
-          <div className="sticky top-0 bg-black text-white px-4 py-3 z-20">
+          <div className="sticky top-0 bg-white text-white px-4 py-3 z-20">
             <button
               onClick={handleSearchClick}
-              className="w-full bg-gray-800 rounded-full px-4 py-2.5"
+              className="w-full bg-white rounded-md border border-gray-300 px-3 py-3"
             >
-              <div className="flex items-center gap-2 text-gray-300">
+              <div className="flex items-center gap-2 text-black">
                 <svg
                   className="w-4 h-4"
                   fill="none"

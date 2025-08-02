@@ -22,14 +22,12 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
     clearRecentSearches,
   } = useSearch();
 
-  // Fetch users when component mounts
   useEffect(() => {
     if (!hasSearched) {
       fetchAllUsers();
     }
   }, [hasSearched, fetchAllUsers]);
 
-  // Debounced search
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       searchUsers(searchQuery);
@@ -75,7 +73,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
 
   return (
     <div className="h-full bg-white">
-      {/* Status Bar */}
       <div className="h-11 bg-white flex items-center justify-between px-6 text-black font-medium">
         <div className="text-sm font-semibold">9:41</div>
         <div className="flex items-center gap-1">
@@ -98,7 +95,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
         </div>
       </div>
 
-      {/* Header with Search */}
       <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 z-10">
         <div className="flex items-center gap-3">
           <button
@@ -114,7 +110,7 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg border-none outline-none text-sm"
+              className="w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               autoFocus
             />
             {searchQuery && (
@@ -129,9 +125,7 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
         </div>
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto pb-20">
-        {/* Error State */}
         {error && (
           <div className="px-4 py-4">
             <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -146,7 +140,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
           </div>
         )}
 
-        {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -154,7 +147,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
           </div>
         )}
 
-        {/* Recent Searches */}
         {showRecentSearches && (
           <div className="px-4 py-4">
             <div className="flex items-center justify-between mb-4">
@@ -212,7 +204,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
           </div>
         )}
 
-        {/* Search Results */}
         {showSearchResults && !isLoading && displayUsers.length > 0 && (
           <div className="px-4 py-4">
             <h3 className="text-base font-semibold text-gray-900 mb-4">
@@ -256,7 +247,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
           </div>
         )}
 
-        {/* All Users (when no search query and no recent searches) */}
         {showAllUsers && (
           <div className="px-4 py-4">
             <h3 className="text-base font-semibold text-gray-900 mb-4">
@@ -300,7 +290,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
           </div>
         )}
 
-        {/* No Results */}
         {showNoResults && (
           <div className="flex-1 flex items-center justify-center px-4 py-12">
             <div className="text-center">
@@ -317,7 +306,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
           </div>
         )}
 
-        {/* Empty State */}
         {!showSearchResults &&
           !showRecentSearches &&
           !showAllUsers &&
@@ -338,7 +326,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
             </div>
           )}
 
-        {/* Initial State */}
         {!hasSearched && !isLoading && (
           <div className="flex-1 flex items-center justify-center px-4 py-12">
             <div className="text-center">
@@ -356,7 +343,6 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
         )}
       </div>
 
-      {/* Home indicator */}
       <div className="pb-2 flex justify-center bg-white">
         <div className="w-32 h-1 bg-black rounded-full"></div>
       </div>

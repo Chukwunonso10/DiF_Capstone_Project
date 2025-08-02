@@ -1,4 +1,3 @@
-// src/hooks/useSearch.ts
 import { useState, useCallback } from "react";
 import { userService, type ApiUser } from "../services/api/userService";
 
@@ -29,10 +28,8 @@ export const useSearch = () => {
     hasSearched: false,
   });
 
-  // Store recent searches in memory (instead of localStorage)
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
 
-  // Fetch all users from API
   const fetchAllUsers = useCallback(async () => {
     setSearchState((prev) => ({ ...prev, isLoading: true, error: null }));
 
@@ -40,7 +37,6 @@ export const useSearch = () => {
       const response = await userService.getAllUsers();
 
       if (response.success && (response.users || response.data)) {
-        // Use users field first, fallback to data field
         const usersData = response.users || response.data || [];
 
         setSearchState((prev) => ({
@@ -67,7 +63,6 @@ export const useSearch = () => {
     }
   }, []);
 
-  // Filter users based on search query
   const searchUsers = useCallback(
     (query: string) => {
       if (!query.trim()) {
@@ -87,7 +82,6 @@ export const useSearch = () => {
     [searchState.users]
   );
 
-  // Add user to recent searches
   const addToRecentSearches = useCallback((user: ApiUser) => {
     const transformedUser = userService.transformApiUser(user);
 
@@ -109,19 +103,16 @@ export const useSearch = () => {
     });
   }, []);
 
-  // Remove specific recent search
   const removeRecentSearch = useCallback((searchId: string) => {
     setRecentSearches((prev) =>
       prev.filter((search) => search.id !== searchId)
     );
   }, []);
 
-  // Clear all recent searches
   const clearRecentSearches = useCallback(() => {
     setRecentSearches([]);
   }, []);
 
-  // Reset search state
   const resetSearch = useCallback(() => {
     setSearchState({
       users: [],
@@ -134,17 +125,14 @@ export const useSearch = () => {
   }, []);
 
   return {
-    // Search state
     users: searchState.filteredUsers,
     allUsers: searchState.users,
     isLoading: searchState.isLoading,
     error: searchState.error,
     hasSearched: searchState.hasSearched,
 
-    // Recent searches
     recentSearches,
 
-    // Actions
     fetchAllUsers,
     searchUsers,
     addToRecentSearches,

@@ -1,4 +1,3 @@
-// src/services/api/userService.ts
 const API_BASE_URL = "https://dif-capstone-project-backend.onrender.com";
 
 export interface ApiUser {
@@ -85,14 +84,13 @@ export class UserService {
         "/api/auth/getall"
       );
 
-      // Handle different response structures from your API
       const users = response.users || response.data || [];
 
       return {
         success: true,
         message: response.message || "Users fetched successfully",
         users: users,
-        data: users, // Keep both for compatibility
+        data: users,
         pagination: response.pagination,
       };
     } catch (error) {
@@ -125,7 +123,6 @@ export class UserService {
     }
   }
 
-  // Transform API user to frontend user format
   transformApiUser(apiUser: ApiUser): {
     id: string;
     username: string;
@@ -142,14 +139,13 @@ export class UserService {
       fullName: apiUser.fullName,
       email: apiUser.email,
       phoneNumber: apiUser.phoneNumber,
-      // Generate avatar from username or use a default
+
       avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
         apiUser.fullName
       )}&background=random&color=fff&size=40`,
     };
   }
 
-  // Filter users based on search query
   filterUsers(users: ApiUser[], query: string): ApiUser[] {
     if (!query.trim()) return users;
 

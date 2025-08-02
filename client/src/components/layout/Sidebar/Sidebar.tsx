@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import SearchSidebar from "../../common/SearchSidebar";
 
 interface SidebarProps {
@@ -10,13 +10,14 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
-  activeItem = "profile",
+  activeItem = "home",
   onItemClick,
   isCollapsed = false,
   userAvatar = "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
 }) => {
   const [showSearchSidebar, setShowSearchSidebar] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const menuItems = [
     {
@@ -185,44 +186,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const bottomItems = [
     {
-      id: "meta-ai",
-      label: "Meta AI",
-      path: "/meta-ai",
-      icon: (
-        <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth={1.5}
-            fill="none"
-          />
-          <circle cx="12" cy="12" r="3" fill="currentColor" />
-        </svg>
-      ),
-    },
-    {
-      id: "ai-studio",
-      label: "AI Studio",
-      path: "/ai-studio",
-      icon: (
-        <svg
-          className="w-7 h-7"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0v10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
-          />
-        </svg>
-      ),
-    },
-    {
       id: "threads",
       label: "Threads",
       path: "/threads",
@@ -233,31 +196,37 @@ const Sidebar: React.FC<SidebarProps> = ({
       ),
     },
     {
-      id: "more",
-      label: "More",
-      path: "/more",
+      id: "meta-ai",
+      label: "Meta AI",
+      path: "/meta-ai",
       icon: (
         <svg
           className="w-7 h-7"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 256 256"
+          fill="currentColor"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M4 6h16M4 12h16M4 18h16"
-          />
+          <path d="M128 0C57.31 0 0 57.31 0 128s57.31 128 128 128 128-57.31 128-128S198.69 0 128 0zm50.92 178.36c-12.54 0-23.15-9.07-34.23-22.93-7.1-9.06-15.15-19.33-24.2-19.33-8.86 0-16.38 9.73-23.41 18.54-10.37 12.96-20.15 25.19-33.08 25.19-17.5 0-31.8-20.43-31.8-45.53s14.3-45.53 31.8-45.53c12.93 0 22.71 12.23 33.08 25.19 7.03 8.81 14.55 18.54 23.41 18.54 9.05 0 17.1-10.27 24.2-19.33 11.08-13.86 21.69-22.93 34.23-22.93 21.6 0 39.18 28.78 39.18 64.27s-17.58 64.27-39.18 64.27z" />
         </svg>
       ),
     },
   ];
 
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    sessionStorage.removeItem("authToken");
+
+    navigate("/login");
+
+    onItemClick?.("logout");
+  };
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleItemClick = (itemId: string, path: string) => {
     if (itemId === "search") {
       setShowSearchSidebar(!showSearchSidebar);
+    } else if (itemId === "more") {
+      console.log("More menu clicked");
     } else {
       setShowSearchSidebar(false);
       onItemClick?.(itemId);
@@ -373,29 +342,79 @@ const Sidebar: React.FC<SidebarProps> = ({
 
               return (
                 <li key={item.id}>
-                  <Link
-                    to={item.path}
-                    onClick={() => handleItemClick(item.id, item.path)}
-                    className={`flex items-center gap-4 px-8 py-3 hover:bg-gray-50 transition-all duration-200 rounded-lg mx-4 ${
-                      isActive ? "font-bold bg-gray-50" : "font-normal"
-                    }`}
-                  >
-                    <div
-                      className={`flex-shrink-0 transition-transform duration-200 ${
-                        isActive ? "scale-110" : ""
+                  {item.path === "#" ? (
+                    <button
+                      onClick={() => handleItemClick(item.id, item.path)}
+                      className={`w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-all duration-200 rounded-lg mx-4 ${
+                        isActive ? "font-bold bg-gray-50" : "font-normal"
                       }`}
                     >
-                      {item.icon}
-                    </div>
-                    {!sidebarCollapsed && (
-                      <span className="text-lg transition-opacity duration-300">
-                        {item.label}
-                      </span>
-                    )}
-                  </Link>
+                      <div
+                        className={`flex-shrink-0 transition-transform duration-200 ${
+                          isActive ? "scale-110" : ""
+                        }`}
+                      >
+                        {item.icon}
+                      </div>
+                      {!sidebarCollapsed && (
+                        <span className="text-lg transition-opacity duration-300">
+                          {item.label}
+                        </span>
+                      )}
+                    </button>
+                  ) : (
+                    <Link
+                      to={item.path}
+                      onClick={() => handleItemClick(item.id, item.path)}
+                      className={`flex items-center gap-4 px-8 py-3 hover:bg-gray-50 transition-all duration-200 rounded-lg mx-4 ${
+                        isActive ? "font-bold bg-gray-50" : "font-normal"
+                      }`}
+                    >
+                      <div
+                        className={`flex-shrink-0 transition-transform duration-200 ${
+                          isActive ? "scale-110" : ""
+                        }`}
+                      >
+                        {item.icon}
+                      </div>
+                      {!sidebarCollapsed && (
+                        <span className="text-lg transition-opacity duration-300">
+                          {item.label}
+                        </span>
+                      )}
+                    </Link>
+                  )}
                 </li>
               );
             })}
+
+            <li>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-4 px-8 py-3 text-left hover:bg-gray-50 transition-all duration-200 rounded-lg mx-4 font-normal"
+              >
+                <div className="flex-shrink-0">
+                  <svg
+                    className="w-7 h-7"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                  </svg>
+                </div>
+                {!sidebarCollapsed && (
+                  <span className="text-lg transition-opacity duration-300">
+                    Log out
+                  </span>
+                )}
+              </button>
+            </li>
           </ul>
         </div>
       </aside>

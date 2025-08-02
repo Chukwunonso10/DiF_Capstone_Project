@@ -6,6 +6,8 @@ const connectDB = require('./config/db')
 
 //import routes
 const authRoute = require('./routes/authRoute')
+const postRoute = require('./routes/postRoute')
+
 
 
 dotenv.config()
@@ -19,9 +21,7 @@ app.use(cors())
 
 
 app.use('/api/auth', authRoute)
-// app.use('/',(req, res)=>{
-//     res.status(200).send("Hello welcome to our page")
-// })
+app.use('/api/posts', postRoute)
 
 
 

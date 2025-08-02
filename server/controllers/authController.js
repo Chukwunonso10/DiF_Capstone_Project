@@ -25,7 +25,6 @@ const createUser = async (req, res) => {
     if (phoneNumber && !/^\+?[\d\s-()]+$/.test(phoneNumber)) {
       return res.status(400).json({ message: "Please enter a valid phone number" })
     }
-
     // Validate username
     if (userName.length < 3 || userName.length > 30) {
       return res.status(400).json({ message: "Username must be between 3 and 30 characters" })
@@ -243,10 +242,14 @@ const getSingleUser = async (req, res) =>{
     res.status(500).json({message: "internal server error"})
   }
 }
+  const welcome = (req, res)=>{
+        res.status(200).send("Hello welcome to our instagram clone website")
+}
 
 module.exports = {
   createUser,
   login,
   getAllUsers,
-  getSingleUser
+  getSingleUser,
+  welcome
 }

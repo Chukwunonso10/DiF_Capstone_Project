@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Search, PlusSquare, Heart, User } from "lucide-react";
 import BottomNavigation from "./BottomNavigation";
 import SearchSidebar from "../../common/SearchSidebar";
-import MobileSearch from "../../common/MobileSearch";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,17 +21,9 @@ const Layout: React.FC<LayoutProps> = ({
   userAvatar,
   showDesktopSidebar = true,
 }) => {
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [showSearchSidebar, setShowSearchSidebar] = useState(false);
   const location = useLocation();
-
-  const handleMobileSearchClick = () => {
-    setShowMobileSearch(true);
-  };
-
-  const handleBackFromSearch = () => {
-    setShowMobileSearch(false);
-  };
+  const navigate = useNavigate();
 
   const handleSearchSidebarToggle = () => {
     setShowSearchSidebar(!showSearchSidebar);
@@ -44,7 +35,8 @@ const Layout: React.FC<LayoutProps> = ({
 
   const handleBottomNavClick = (item: string) => {
     if (item === "search") {
-      handleMobileSearchClick();
+      // Navigate to the search page for mobile
+      navigate("/search");
     }
     onItemClick?.(item);
   };
@@ -97,44 +89,9 @@ const Layout: React.FC<LayoutProps> = ({
     },
   ];
 
-  if (showMobileSearch) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex justify-center">
-        <div className="w-full max-w-sm bg-white min-h-screen relative shadow-xl">
-          <div className="h-11 bg-white flex items-center justify-between px-6 text-black font-medium">
-            <div className="text-sm font-semibold">9:41</div>
-            <div className="flex items-center gap-1">
-              <div className="flex gap-1">
-                <div className="w-1 h-1 bg-black rounded-full"></div>
-                <div className="w-1 h-1 bg-black rounded-full"></div>
-                <div className="w-1 h-1 bg-black rounded-full"></div>
-                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-              </div>
-              <svg
-                className="w-4 h-3 ml-1"
-                viewBox="0 0 16 12"
-                fill="currentColor"
-              >
-                <path d="M1 3h14v6H1z" />
-                <path
-                  d="M0 2h16v8H0z"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1"
-                />
-              </svg>
-              <div className="w-6 h-3 border border-black rounded-sm bg-black"></div>
-            </div>
-          </div>
-          <MobileSearch onBack={handleBackFromSearch} />
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-black rounded-full"></div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Mobile Layout */}
       <div className="lg:hidden flex justify-center">
         <div className="w-full max-w-sm bg-white min-h-screen relative shadow-xl">
           <div className="h-11 bg-white flex items-center justify-between px-6 text-black font-medium">
@@ -174,6 +131,7 @@ const Layout: React.FC<LayoutProps> = ({
         </div>
       </div>
 
+      {/* Desktop Layout */}
       <div className="hidden lg:block">
         {showDesktopSidebar && (
           <>

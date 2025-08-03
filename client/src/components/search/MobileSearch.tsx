@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { ArrowLeft, Search, Users, AlertCircle, X } from "lucide-react";
+// File: src/components/search/MobileSearch.tsx
+import React, { useState, useEffect } from "react";
+import { ArrowLeft, Search, X } from "lucide-react";
 import { useSearch } from "../../hooks/useSearch";
 import { userService, type ApiUser } from "../../services/api/userService";
 
@@ -7,94 +8,146 @@ interface MobileSearchProps {
   onBack: () => void;
 }
 
+interface RecentSearch {
+  id: string;
+  username: string;
+  displayName: string;
+  avatar: string;
+  timestamp: number;
+}
+
 const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const {
-    users,
-    isLoading,
-    error,
-    hasSearched,
-    recentSearches,
-    fetchAllUsers,
-    searchUsers,
-    addToRecentSearches,
-    removeRecentSearch,
-    clearRecentSearches,
-  } = useSearch();
+  const [isSearchInputActive, setIsSearchInputActive] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
 
+  const { users, isLoading, error, hasSearched, fetchAllUsers, searchUsers } =
+    useSearch();
+
+  // Load recent searches from localStorage on component mount
   useEffect(() => {
-    if (!hasSearched) {
+    const savedSearches = localStorage.getItem("recentSearches");
+    if (savedSearches) {
+      try {
+        const parsed = JSON.parse(savedSearches);
+        setRecentSearches(parsed);
+      } catch (error) {
+        console.error("Error parsing recent searches:", error);
+      }
+    }
+  }, []);
+
+  // Save recent searches to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("recentSearches", JSON.stringify(recentSearches));
+  }, [recentSearches]);
+
+  // Fetch all users when search input becomes active
+  useEffect(() => {
+    if (isSearchInputActive && !hasSearched) {
       fetchAllUsers();
     }
-  }, [hasSearched, fetchAllUsers]);
+  }, [isSearchInputActive, hasSearched, fetchAllUsers]);
 
+  // Filter users when search query changes
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
+    if (hasSearched) {
       searchUsers(searchQuery);
-    }, 300);
+    }
+  }, [searchQuery, hasSearched, searchUsers]);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, searchUsers]);
+  const handleSearchInputFocus = () => {
+    setIsSearchInputActive(true);
+  };
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
   };
 
-  const handleClearAll = () => {
-    clearRecentSearches();
+  const handleClearSearch = () => {
+    setSearchQuery("");
+  };
+
+  const handleClearAllRecent = () => {
+    setRecentSearches([]);
   };
 
   const handleUserClick = (user: ApiUser) => {
-    addToRecentSearches(user);
-    console.log("Navigate to user:", user.userName);
-    // TODO: Navigate to user profile
-    onBack();
+    // Transform the API user to the format needed for recent searches
+    const transformedUser = userService.transformApiUser(user);
+
+    // Add to recent searches
+    const newSearch: RecentSearch = {
+      id: transformedUser.id,
+      username: transformedUser.username,
+      displayName: transformedUser.displayName,
+      avatar: transformedUser.avatar,
+      timestamp: Date.now(),
+    };
+
+    setRecentSearches((prev) => {
+      // Remove if already exists and add to front
+      const filtered = prev.filter((search) => search.id !== newSearch.id);
+      return [newSearch, ...filtered].slice(0, 10); // Keep only 10 recent searches
+    });
+
+    // Navigate to user profile (you can implement this based on your routing)
+    console.log("Navigate to user:", transformedUser.username);
   };
 
-  const handleRecentSearchClick = (search: (typeof recentSearches)[0]) => {
+  const handleRecentSearchClick = (search: RecentSearch) => {
     console.log("Navigate to recent search:", search.username);
-    // TODO: Navigate to user profile
-    onBack();
   };
 
-  const displayUsers = useMemo(() => {
-    return users.map((user) => userService.transformApiUser(user));
-  }, [users]);
+  const handleRemoveRecentSearch = (
+    searchId: string,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
+    setRecentSearches((prev) =>
+      prev.filter((search) => search.id !== searchId)
+    );
+  };
 
-  const showSearchResults = searchQuery.trim().length > 0;
-  const showRecentSearches = !showSearchResults && recentSearches.length > 0;
-  const showAllUsers =
-    !showSearchResults &&
-    !showRecentSearches &&
-    hasSearched &&
-    displayUsers.length > 0;
-  const showNoResults =
-    showSearchResults && displayUsers.length === 0 && !isLoading;
+  // Show loading state
+  if (isLoading && !hasSearched) {
+    return (
+      <div className="h-full bg-white">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 z-10">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search"
+                className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg border-none outline-none text-sm shadow-none"
+                disabled
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Loading State */}
+        <div className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-gray-500 text-sm">Loading users...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full bg-white">
-      <div className="h-11 bg-white flex items-center justify-between px-6 text-black font-medium">
-        <div className="text-sm font-semibold">9:41</div>
-        <div className="flex items-center gap-1">
-          <div className="flex gap-1">
-            <div className="w-1 h-1 bg-black rounded-full"></div>
-            <div className="w-1 h-1 bg-black rounded-full"></div>
-            <div className="w-1 h-1 bg-black rounded-full"></div>
-            <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-          </div>
-          <svg className="w-4 h-3 ml-1" viewBox="0 0 16 12" fill="currentColor">
-            <path d="M1 3h14v6H1z" />
-            <path
-              d="M0 2h16v8H0z"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-            />
-          </svg>
-          <div className="w-6 h-3 border border-black rounded-sm bg-black"></div>
-        </div>
-      </div>
-
+      {/* Header */}
       <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 z-10">
         <div className="flex items-center gap-3">
           <button
@@ -107,15 +160,17 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder="Search"
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              onFocus={handleSearchInputFocus}
+              className="w-full pl-10 pr-10 py-2 bg-gray-100 rounded-lg border-0 outline-none text-sm focus:bg-gray-50 focus:ring-0 shadow-none"
+              style={{ boxShadow: "none" }}
               autoFocus
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery("")}
+                onClick={handleClearSearch}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full transition-colors"
               >
                 <X className="w-3 h-3 text-gray-400" />
@@ -125,44 +180,40 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-20">
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Error State */}
         {error && (
           <div className="px-4 py-4">
-            <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-red-800">
-                  Error loading users
-                </p>
-                <p className="text-xs text-red-600 mt-1">{error}</p>
-              </div>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-600 text-sm">{error}</p>
+              <button
+                onClick={fetchAllUsers}
+                className="mt-2 text-red-600 text-sm font-medium hover:underline"
+              >
+                Try again
+              </button>
             </div>
           </div>
         )}
 
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <p className="ml-3 text-gray-600">Loading users...</p>
-          </div>
-        )}
-
-        {showRecentSearches && (
+        {/* Recent searches section - only show when search input is not active or no query */}
+        {!isSearchInputActive && recentSearches.length > 0 && (
           <div className="px-4 py-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-semibold text-gray-900">Recent</h3>
               <button
-                onClick={handleClearAll}
-                className="text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors"
+                onClick={handleClearAllRecent}
+                className="text-blue-500 text-sm font-medium hover:text-blue-600"
               >
                 Clear all
               </button>
             </div>
-            <div className="space-y-1">
+            <div>
               {recentSearches.map((search) => (
                 <div
                   key={search.id}
-                  className="flex items-center gap-3 py-3 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors group"
+                  className="flex items-center gap-3 py-3 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2"
                   onClick={() => handleRecentSearchClick(search)}
                 >
                   <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
@@ -170,31 +221,19 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
                       src={search.avatar}
                       alt={search.username}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          search.displayName
-                        )}&background=3b82f6&color=fff&size=40`;
-                      }}
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="font-semibold text-sm text-gray-900 truncate">
-                        {search.username}
-                      </span>
-                    </div>
+                    <p className="font-semibold text-sm text-gray-900 truncate">
+                      {search.username}
+                    </p>
                     <p className="text-sm text-gray-500 truncate">
                       {search.displayName}
                     </p>
                   </div>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeRecentSearch(search.id);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-2 hover:bg-gray-200 rounded-full transition-all duration-200"
-                    aria-label="Remove search"
+                    onClick={(e) => handleRemoveRecentSearch(search.id, e)}
+                    className="p-2 hover:bg-gray-200 rounded-full transition-colors"
                   >
                     <X className="w-4 h-4 text-gray-400" />
                   </button>
@@ -204,147 +243,92 @@ const MobileSearch: React.FC<MobileSearchProps> = ({ onBack }) => {
           </div>
         )}
 
-        {showSearchResults && !isLoading && displayUsers.length > 0 && (
-          <div className="px-4 py-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-4">
-              Search Results ({displayUsers.length})
-            </h3>
-            <div className="space-y-1">
-              {displayUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center gap-3 py-3 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors"
-                  onClick={() =>
-                    handleUserClick(users.find((u) => u._id === user.id)!)
-                  }
-                >
-                  <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-                    <img
-                      src={user.avatar}
-                      alt={user.username}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          user.displayName
-                        )}&background=3b82f6&color=fff&size=40`;
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="font-semibold text-sm text-gray-900 truncate">
-                        {user.username}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 truncate">
-                      {user.displayName}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showAllUsers && (
-          <div className="px-4 py-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-4">
-              All Users ({displayUsers.length})
-            </h3>
-            <div className="space-y-1">
-              {displayUsers.slice(0, 50).map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center gap-3 py-3 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors"
-                  onClick={() =>
-                    handleUserClick(users.find((u) => u._id === user.id)!)
-                  }
-                >
-                  <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-                    <img
-                      src={user.avatar}
-                      alt={user.username}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          user.displayName
-                        )}&background=3b82f6&color=fff&size=40`;
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="font-semibold text-sm text-gray-900 truncate">
-                        {user.username}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 truncate">
-                      {user.displayName}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showNoResults && (
-          <div className="flex-1 flex items-center justify-center px-4 py-12">
-            <div className="text-center">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                <Users className="w-10 h-10 text-gray-400" />
+        {/* Search results or all users */}
+        {isSearchInputActive && hasSearched && (
+          <>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                <span className="ml-2 text-sm text-gray-500">Searching...</span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No users found
-              </h3>
-              <p className="text-gray-500 text-sm">
-                Try searching with a different term
-              </p>
-            </div>
-          </div>
+            ) : users.length > 0 ? (
+              <div className="px-4">
+                <div className="py-2">
+                  <p className="text-sm text-gray-500 mb-4">
+                    {searchQuery
+                      ? `${users.length} result${
+                          users.length !== 1 ? "s" : ""
+                        } for "${searchQuery}"`
+                      : `${users.length} users`}
+                  </p>
+                </div>
+                {users.map((user) => {
+                  const transformedUser = userService.transformApiUser(user);
+                  return (
+                    <div
+                      key={user._id}
+                      className="flex items-center gap-3 py-3 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2"
+                      onClick={() => handleUserClick(user)}
+                    >
+                      <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                        <img
+                          src={transformedUser.avatar}
+                          alt={transformedUser.username}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className="font-semibold text-sm text-gray-900 truncate">
+                            {transformedUser.username}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500 truncate">
+                          {transformedUser.displayName}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center px-4 py-12">
+                <div className="text-center">
+                  <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Search className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {searchQuery ? "No results found" : "No users found"}
+                  </h3>
+                  <p className="text-gray-500 text-sm">
+                    {searchQuery
+                      ? "Try searching for something else"
+                      : "There are no users to display"}
+                  </p>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
-        {!showSearchResults &&
-          !showRecentSearches &&
-          !showAllUsers &&
-          !isLoading &&
-          hasSearched && (
+        {/* Initial state - not searched yet and no recent searches */}
+        {!isSearchInputActive &&
+          !hasSearched &&
+          recentSearches.length === 0 && (
             <div className="flex-1 flex items-center justify-center px-4 py-12">
               <div className="text-center">
                 <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                  <Users className="w-10 h-10 text-gray-400" />
+                  <Search className="w-10 h-10 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No users available
+                  Search for users
                 </h3>
                 <p className="text-gray-500 text-sm">
-                  Check your connection and try again
+                  Tap the search bar to find people
                 </p>
               </div>
             </div>
           )}
-
-        {!hasSearched && !isLoading && (
-          <div className="flex-1 flex items-center justify-center px-4 py-12">
-            <div className="text-center">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                <Search className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Search for users
-              </h3>
-              <p className="text-gray-500 text-sm">
-                Find and connect with other users
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="pb-2 flex justify-center bg-white">
-        <div className="w-32 h-1 bg-black rounded-full"></div>
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import SearchSidebar from "../../common/SearchSidebar";
+import { useAuth } from "../../../hooks/useAuth";
+import { useAuthContext } from "../../../context/AuthContext";
 
 interface SidebarProps {
   activeItem?: string;
@@ -13,11 +15,19 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeItem = "home",
   onItemClick,
   isCollapsed = false,
-  userAvatar = "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
 }) => {
   const [showSearchSidebar, setShowSearchSidebar] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { getCurrentUser } = useAuth();
+  const currentUser = getCurrentUser();
+
+  const { setUser, setIsAuthenticated } = useAuthContext();
+
+  const userAvatar =
+    currentUser?.profilePicture ||
+    "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541";
 
   const menuItems = [
     {
@@ -213,10 +223,18 @@ const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const handleLogout = () => {
+    // Remove tokens and user info
     localStorage.removeItem("authToken");
     sessionStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
 
-    navigate("/login");
+    // Update auth state BEFORE navigating
+    setIsAuthenticated(false);
+    setUser(null);
+
+    // Now navigate to login
+    navigate("/login", { replace: true });
 
     onItemClick?.("logout");
   };

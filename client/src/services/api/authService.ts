@@ -19,6 +19,7 @@ export interface AuthResponse {
   message: string;
   data?: {
     user: {
+      profilePicture: unknown;
       id: string;
       email?: string;
       phoneNumber?: string;

@@ -1,6 +1,7 @@
 const API_BASE_URL = "https://dif-capstone-project-backend.onrender.com";
 
 export interface ApiUser {
+  bio: string;
   _id: string;
   fullName: string;
   userName: string;
@@ -8,6 +9,9 @@ export interface ApiUser {
   phoneNumber?: string;
   createdAt?: string;
   updatedAt?: string;
+  followers?: [];
+  following?: [];
+  profilePicture?: string;
 }
 
 export interface GetAllUsersResponse {
@@ -105,13 +109,64 @@ export class UserService {
 
   async getUserByIdentifier(identifier: string): Promise<GetUserResponse> {
     try {
-      const response = await this.makeRequest<GetUserResponse>(
+      const response = await this.makeRequest<unknown>(
         `/api/auth/getme/${identifier}`
       );
+      console.log("From API here: ", response);
+      console.log("Username ", identifier);
+
       return {
         success: true,
-        message: response.message || "User fetched successfully",
-        data: response.data,
+        message: "User fetched successfully",
+        data: response as ApiUser, // because the whole response IS the user
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to fetch user",
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  // New method to get user by username specifically
+  async getUserByUsername(username: string): Promise<GetUserResponse> {
+    try {
+      // Try to get user by username first
+      const response = await this.makeRequest<GetUserResponse>(
+        `/api/auth/getme/${username}`
+      );
+
+      if (response.success && response.data) {
+        console.log(response);
+        return {
+          success: true,
+          message: response.message || "User fetched successfully",
+          data: response.data,
+        };
+      }
+
+      // If direct username lookup fails, try to find in all users
+      // const allUsersResponse = await this.getAllUsers();
+      // if (allUsersResponse.success && allUsersResponse.users) {
+      //   const user = allUsersResponse.users.find(
+      //     (u) => u.userName.toLowerCase() === username.toLowerCase()
+      //   );
+
+      //   if (user) {
+      //     return {
+      //       success: true,
+      //       message: "User found successfully",
+      //       data: user,
+      //     };
+      //   }
+      // }
+
+      return {
+        success: false,
+        message: "User not found",
+        error: "User not found",
       };
     } catch (error) {
       return {
@@ -131,6 +186,7 @@ export class UserService {
     email?: string;
     phoneNumber?: string;
     avatar: string;
+    bio: string;
   } {
     return {
       id: apiUser._id,
@@ -139,10 +195,10 @@ export class UserService {
       fullName: apiUser.fullName,
       email: apiUser.email,
       phoneNumber: apiUser.phoneNumber,
-
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        apiUser.fullName
-      )}&background=random&color=fff&size=40`,
+      avatar:
+        apiUser.profilePicture ||
+        `https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541`,
+      bio: apiUser.bio,
     };
   }
 

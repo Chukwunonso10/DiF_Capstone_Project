@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { X, Search, Users, AlertCircle } from "lucide-react";
 import { useSearch } from "../../hooks/useSearch";
 import { userService, type ApiUser } from "../../services/api/userService";
@@ -9,6 +10,7 @@ interface SearchSidebarProps {
 }
 
 const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const {
     users,
@@ -65,12 +67,14 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
   const handleUserClick = (user: ApiUser) => {
     addToRecentSearches(user);
 
-    console.log("Navigate to user:", user.userName);
+    // Navigate to user profile
+    navigate(`/user/${user.userName}`);
     onClose();
   };
 
   const handleRecentSearchClick = (search: (typeof recentSearches)[0]) => {
-    console.log("Navigate to recent search:", search.username);
+    // Navigate to user profile
+    navigate(`/user/${search.username}`);
     onClose();
   };
 

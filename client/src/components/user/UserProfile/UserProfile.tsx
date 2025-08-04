@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAuth } from "../../../hooks/useAuth";
 
 import Sidebar from "../../layout/Sidebar/Sidebar";
 import ProfileHeader from "../../common/ProfileHeader";
@@ -10,8 +11,9 @@ import ProfileTabs from "../../common/ProfileTabs";
 import PostsGrid from "../../common/PostsGrid";
 import MobileBottomNav from "../../common/MobileBottomNav";
 
-import profileImage from "../../../assets/images/profileImage.png";
-
+// import profileImage from "../../../assets/images/profileImage.png";
+const profileImage =
+  "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541";
 const mockUserData = {
   username: "jacob_w",
   displayName: "Jacob West",
@@ -95,6 +97,10 @@ const mockUserData = {
 };
 
 const UserProfile = () => {
+  //Fetch user from the useAuth hook
+  const { getCurrentUser } = useAuth();
+  const currentUser = getCurrentUser();
+
   const [activeTab, setActiveTab] = useState<"posts" | "saved" | "tagged">(
     "posts"
   );
@@ -133,7 +139,7 @@ const UserProfile = () => {
       <div className="lg:hidden">
         <div className="w-full bg-white min-h-screen">
           <ProfileHeader
-            username={mockUserData.username}
+            username={currentUser.userName}
             onBack={handleBack}
             onMenuClick={handleMenuClick}
             isDesktop={false}
@@ -143,8 +149,8 @@ const UserProfile = () => {
             <div className="flex items-start justify-between mb-6">
               <div className="flex-shrink-0">
                 <UserAvatar
-                  src={mockUserData.profileImage}
-                  alt={mockUserData.username}
+                  src={currentUser.profilePicture || profileImage}
+                  alt={currentUser.userName}
                   size="lg"
                 />
               </div>
@@ -178,8 +184,8 @@ const UserProfile = () => {
             </div>
 
             <ProfileBio
-              displayName={mockUserData.displayName}
-              bio={mockUserData.bio}
+              displayName={currentUser.fullName}
+              bio={currentUser.bio}
             />
 
             <StoryHighlights
@@ -206,7 +212,7 @@ const UserProfile = () => {
           <MobileBottomNav
             activeItem="profile"
             onItemClick={handleSidebarItemClick}
-            userAvatar={mockUserData.profileImage}
+            userAvatar={currentUser.profilePicture || profileImage}
           />
 
           <div className="pb-2 flex justify-center">
@@ -219,7 +225,7 @@ const UserProfile = () => {
         <Sidebar
           activeItem="profile"
           onItemClick={handleSidebarItemClick}
-          userAvatar={mockUserData.profileImage}
+          userAvatar={currentUser.profilePicture || profileImage}
         />
 
         <div className="transition-all duration-300 ease-out ml-80">
@@ -228,8 +234,8 @@ const UserProfile = () => {
               <div className="flex items-start gap-12 mb-12">
                 <div className="flex-shrink-0">
                   <UserAvatar
-                    src={mockUserData.profileImage}
-                    alt={mockUserData.username}
+                    src={currentUser.profilePicture || profileImage}
+                    alt={currentUser.username}
                     size="xl"
                     className="w-40 h-40"
                   />
@@ -238,7 +244,7 @@ const UserProfile = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-6 mb-8">
                     <h1 className="text-2xl font-light">
-                      {mockUserData.username}
+                      {currentUser.userName}
                     </h1>
                     <button className="px-6 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors">
                       Edit profile
@@ -275,8 +281,8 @@ const UserProfile = () => {
                   </div>
 
                   <ProfileBio
-                    displayName={mockUserData.displayName}
-                    bio={mockUserData.bio}
+                    displayName={currentUser.fullName}
+                    bio={currentUser.bio}
                   />
                 </div>
               </div>

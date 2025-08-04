@@ -61,12 +61,17 @@ export const useAuth = () => {
 
       if (response.success && response.data) {
         localStorage.setItem("authToken", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-
+        const userD = response.data.user;
+        if (!userD.profilePicture) {
+          userD.profilePicture =
+            "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541";
+        }
         setUser({
           ...response.data.user,
           username: response.data.user.userName,
         });
+
+        localStorage.setItem("user", JSON.stringify(userD));
 
         setIsAuthenticated(true);
 

@@ -1,57 +1,54 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import UserCard from "../user/UserCard/UserCard";
+import { userService, type ApiUser } from "../../services/api/userService";
+import { useAuth } from "../../hooks/useAuth";
 
-const mockSuggestedUsers = [
-  {
-    id: "1",
-    username: "modupeandjames",
-    name: "Followed by presh_george +...",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
-    isVerified: false,
-  },
-  {
-    id: "2",
-    username: "diaryofakitchenlover",
-    name: "Followed by ezeh.kelvin 395...",
-    avatar:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=40&h=40&fit=crop&crop=face",
-    isVerified: true,
-  },
-  {
-    id: "3",
-    username: "chukwuemeka.emmanuel...",
-    name: "Suggested for you",
-    avatar:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop&crop=face",
-    isVerified: false,
-  },
-  {
-    id: "4",
-    username: "okeke6619",
-    name: "Following michelle_ubah",
-    avatar:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
-    isVerified: false,
-  },
-  {
-    id: "5",
-    username: "tersugh_tyotule",
-    name: "Suggested for you",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
-    isVerified: false,
-  },
-];
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const currentUser = {
   username: "giftybabe",
   name: "Ngozi Uloka",
   avatar:
-    "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=56&h=56&fit=crop&crop=face",
+    "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
 };
 
 const SuggestedUsers: React.FC = () => {
+  const navigate = useNavigate();
+  const [suggestedUsers, setSuggestedUsers] = useState<ApiUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { getCurrentUser } = useAuth();
+  const currentUser = getCurrentUser();
+
+  useEffect(() => {
+    const fetchSuggestedUsers = async () => {
+      try {
+        setIsLoading(true);
+        const response = await userService.getAllUsers();
+
+        if (response.success && (response.users || response.data)) {
+          const users = response.users || response.data || [];
+
+          const filtered = users.filter(
+            (user) => user.userName !== currentUser.userName
+          );
+
+          const shuffled = filtered.sort(() => 0.5 - Math.random());
+          setSuggestedUsers(shuffled.slice(0, 5));
+        } else {
+          setError(response.message || "Failed to fetch users");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Network error occurred");
+        console.error("Error fetching suggested users:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSuggestedUsers();
+  }, []);
+
   const handleUserFollow = (userId: string) => {
     console.log("Follow user:", userId);
   };
@@ -62,20 +59,38 @@ const SuggestedUsers: React.FC = () => {
 
   const handleSeeAll = () => {
     console.log("See all suggested users");
+    navigate("/search");
   };
+
+  const handleUserClick = (user: ApiUser) => {
+    navigate(`/user/${user.userName}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-transparent py-4 ml-[20%]">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-transparent py-4 ml-[20%]">
       <div className="flex items-center justify-between mb-12 px-2">
         <div className="flex items-center space-x-4">
           <img
-            src={currentUser.avatar}
+            src={
+              currentUser.profilePicture ||
+              `https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541`
+            }
             alt={currentUser.username}
             className="w-16 h-16 rounded-full object-cover"
           />
           <div>
-            <h3 className="font-semibold text-base">{currentUser.username}</h3>
-            <p className="text-gray-500 text-sm mt-1">{currentUser.name}</p>
+            <h3 className="font-semibold text-base">{currentUser.userName}</h3>
+            <p className="text-gray-500 text-sm mt-1">{currentUser.fullName}</p>
           </div>
         </div>
         <button
@@ -99,18 +114,43 @@ const SuggestedUsers: React.FC = () => {
           </button>
         </div>
 
-        <div className="space-y-6 px-2">
-          {mockSuggestedUsers.map((user) => (
-            <div key={user.id} className="py-2">
-              <UserCard
-                user={user}
-                onFollow={() => handleUserFollow(user.id)}
-                showFollowButton={true}
-                size="sm"
-              />
-            </div>
-          ))}
-        </div>
+        {error ? (
+          <div className="px-2 py-4 text-center">
+            <p className="text-red-500 text-sm">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-2 text-blue-500 text-sm hover:text-blue-600"
+            >
+              Try again
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6 px-2">
+            {suggestedUsers.map((user) => {
+              const transformedUser = userService.transformApiUser(user);
+              return (
+                <div
+                  key={user._id}
+                  className="py-2 cursor-pointer"
+                  onClick={() => handleUserClick(user)}
+                >
+                  <UserCard
+                    user={{
+                      id: transformedUser.id,
+                      username: transformedUser.username,
+                      name: transformedUser.displayName,
+                      avatar: transformedUser.avatar,
+                      isVerified: false,
+                    }}
+                    onFollow={() => handleUserFollow(user._id)}
+                    showFollowButton={true}
+                    size="sm"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="text-sm text-gray-400 leading-relaxed px-2 py-2">

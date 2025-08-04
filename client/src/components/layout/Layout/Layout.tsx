@@ -35,7 +35,6 @@ const Layout: React.FC<LayoutProps> = ({
 
   const handleBottomNavClick = (item: string) => {
     if (item === "search") {
-      // Navigate to the search page for mobile
       navigate("/search");
     }
     onItemClick?.(item);
@@ -91,7 +90,6 @@ const Layout: React.FC<LayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Layout */}
       <div className="lg:hidden flex justify-center">
         <div className="w-full max-w-sm bg-white min-h-screen relative shadow-xl">
           <div className="h-11 bg-white flex items-center justify-between px-6 text-black font-medium">
@@ -131,7 +129,6 @@ const Layout: React.FC<LayoutProps> = ({
         </div>
       </div>
 
-      {/* Desktop Layout */}
       <div className="hidden lg:block">
         {showDesktopSidebar && (
           <>

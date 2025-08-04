@@ -246,10 +246,89 @@ const getSingleUser = async (req, res) =>{
         res.status(200).send("<h1>Hello welcome to our instagram clone website</h1>")
 }
 
+const toggleFollow =  async (req, res) =>{
+    try {
+      const userToFollowId = req.params.id
+      const user = req.user
+      
+
+      if (!userToFollowId) return res.status(401).json({ success: true, message: "User to follow ID not found "})
+      if (user._id.toString() === userToFollowId.toString()) return res.status(400).json({ message: "You cannot follow yourself "})
+    
+      const userToFollow = await User.findById(userToFollowId)
+      if (!userToFollow) return res.status(404).json({ success: false, message: "User not found "})
+    
+      const isFollowing = user.following.includes(userToFollowId)
+      if (isFollowing) {
+      // Unfollow
+      await User.findByIdAndUpdate(user._id, {
+        $pull: { following: userToFollowId },
+      })
+      await User.findByIdAndUpdate(userToFollowId, {
+        $pull: { followers: user._id },
+      })
+
+      res.status(200).json({
+        message: "User unfollowed successfully",
+        isFollowing: false,
+      })
+    } else {
+      // Follow
+      await User.findByIdAndUpdate(user._id, {
+        $push: { following: userToFollowId },
+      })
+      await User.findByIdAndUpdate(userToFollowId, {
+        $push: { followers: user._id },
+      })
+
+      res.status(200).json({
+        message: "User followed successfully",
+        isFollowing: true,
+      })
+    }
+    
+  }catch (error) {
+      console.error("follow/unfollow Error: " + error.message)
+      res.status(500).json({ message: "internal server Error "})
+    }
+    
+  }
+
+
+
+
+//       if (isFollowing){
+//         user.followers.pull(userToFollowId)
+//         userToFollow.following.pull(user._id)
+
+//         await user.save()
+//         await userToFollow.save()
+
+//         res.status(200).json({ success: true, message: "User unFollowed successfully "})
+
+//       }else{
+//         const user = User.findById(user._id)
+//         user.following.push(userToFollowId)
+//         userToFollow.followers.push(user._id)
+
+//         await user.save()
+//         await userToFollow.save()
+
+//         res.status(200).json({ success: true, message: "User followed successfully"})
+//       }
+
+     
+
+    
+
+    
+// }
+
 module.exports = {
   createUser,
   login,
   getAllUsers,
   getSingleUser,
-  welcome
+  welcome,
+  toggleFollow
 }

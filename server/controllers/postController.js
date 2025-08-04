@@ -59,7 +59,7 @@ const getSinglePost = async (req, res)=>{
         const { id } = req.params
         const post = await Post.findById(id)
                         .populate("userId", "fullName userName profilePicture")
-                        .populate("comments.user", "fullName userName profilePicture")
+                        
 
         if (!post) return res.status(404).json({ message: "Post not found"})
     
@@ -142,6 +142,7 @@ const toggleLike = async (req, res) =>{
         res.status(500).json({ message: "internal server Error "})
   }
 }
+
 
 module.exports = {
     createPost,

@@ -24,12 +24,29 @@ const createPost = async (req,res)=>{
 
 const getAllPost = async (req, res) =>{
     try {
-        const posts = await Post.find()
+        const { page=1, limit=5, search } = req.query
+        const skip = (page - 1) * limit
+        let filter = {};
+        if (search) {
+            filter = {
+                $or: [ {tags: {$regex: search, $options: "i" }}, {content: {$regex: search, $options: "i"}}]
+            }
+        }
+        const posts = await Post.find(filter)
+                        .skip(parseInt(skip))
+                        .limit(parseInt(limit))
+                        .sort({createdAt: -1})
                         .populate("userId","fullName userName profilePicture")
-                
-        if (posts.length == 0)return res.status(200).json({ message: "No available posts", posts:[],})
+        const total = await Post.countDocuments(filter)     
+        if (posts.length == 0)return res.status(200).json({ message: "No available posts", posts:[], pagination:{page, limit, total, pages:0 }})
 
-        res.status(200).json({success: true, posts: posts})
+        res.status(200).json({success: true, posts: posts, pagination:{ 
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total,
+            pages: Math.ceil(total/parseInt(limit))
+        }})
+
     }catch (error) {
         console.error(error.message)
         res.status(500).json({ success: false, message: " internal Server Error "})

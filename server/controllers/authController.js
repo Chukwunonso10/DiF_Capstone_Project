@@ -157,7 +157,7 @@ const login = async (req, res) => {
         ...(user.phoneNumber && { phoneNumber: user.phoneNumber }),
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "1d" },
     )
 
     // Return success response (exclude password)
@@ -187,7 +187,7 @@ const login = async (req, res) => {
 
 
 const getAllUsers = async (req, res)=>{
-  const { page=1, limit=10, search } = req.query;
+  const { page=1, limit=5, search } = req.query;
   try {
     const skip = (page - 1) * limit
     let query = {}
@@ -240,10 +240,10 @@ const getSingleUser = async (req, res) =>{
   } catch (error) {
     console.error("error retrieving user",error.message)
     res.status(500).json({message: "internal server error"})
-  }
+  } 
 }
   const welcome = (req, res)=>{
-        res.status(200).send("Hello welcome to our instagram clone website")
+        res.status(200).send("<h1>Hello welcome to our instagram clone website</h1>")
 }
 
 module.exports = {

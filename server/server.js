@@ -7,6 +7,7 @@ const connectDB = require('./config/db')
 //import routes
 const authRoute = require('./routes/authRoute')
 const postRoute = require('./routes/postRoute')
+const commentRoute = require('./routes/commentRoute')
 
 
 
@@ -22,6 +23,7 @@ app.use(cors())
 
 app.use('/api/auth', authRoute)
 app.use('/api/posts', postRoute)
+app.use('/api/comment',commentRoute)
 
 
 

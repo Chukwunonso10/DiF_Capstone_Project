@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useAuthContext } from "../../context/AuthContext";
+import { useProfile } from "../../hooks/useProfile";
 import ChangeProfilePhotoModal from "../../components/common/ChangeProfilePhotoModal";
 import Sidebar from "../../components/layout/Sidebar/Sidebar";
 import MobileBottomNav from "../../components/common/MobileBottomNav";
@@ -18,6 +20,15 @@ const EditProfile: React.FC = () => {
   const navigate = useNavigate();
   const { getCurrentUser } = useAuth();
   const { user, updateUserProfile } = useAuthContext();
+  const {
+    updateProfile,
+    uploadProfilePicture,
+    removeProfilePicture,
+    refreshProfile,
+    isLoading: profileLoading,
+    error: profileError,
+    clearError,
+  } = useProfile();
   const currentUser = getCurrentUser();
 
   const [formData, setFormData] = useState<EditProfileFormData>({
@@ -32,12 +43,12 @@ const EditProfile: React.FC = () => {
   const [profileImage, setProfileImage] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [showAccountSuggestions, setShowAccountSuggestions] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const defaultImage =
     "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541";
 
-  // Fixed useEffect with proper dependencies and initialization
+  // Initialize form data and profile image
   useEffect(() => {
     const userData = user || currentUser;
     if (userData) {
@@ -63,7 +74,14 @@ const EditProfile: React.FC = () => {
         prev !== newProfileImage ? newProfileImage : prev
       );
     }
-  }, [user?.id, currentUser?.id]); // Only depend on user ID to prevent infinite loops
+  }, [user?.id, currentUser?.id]);
+
+  // Clear errors when profile error changes
+  useEffect(() => {
+    if (profileError) {
+      setFormError(profileError);
+    }
+  }, [profileError]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -78,49 +96,41 @@ const EditProfile: React.FC = () => {
     // Clear any existing errors when user starts typing
     if (formError) {
       setFormError(null);
+      clearError();
     }
   };
 
   const handlePhotoUpload = async (file: File) => {
     try {
-      setIsLoading(true);
+      setFormError(null);
+      clearError();
 
-      // Create a local URL for the uploaded image
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImage(imageUrl);
+      const imageUrl = await uploadProfilePicture(file);
 
-      // Update the user profile in context immediately
-      updateUserProfile({
-        profilePicture: imageUrl,
-      });
-
-      setShowChangePhotoModal(false);
+      if (imageUrl) {
+        setProfileImage(imageUrl);
+        setShowChangePhotoModal(false);
+      }
     } catch (error) {
       console.error("Error uploading photo:", error);
       setFormError("Failed to upload profile picture");
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handlePhotoRemove = async () => {
     try {
-      setIsLoading(true);
+      setFormError(null);
+      clearError();
 
-      // Set to default image
-      setProfileImage(defaultImage);
+      const success = await removeProfilePicture();
 
-      // Update the user profile in context immediately
-      updateUserProfile({
-        profilePicture: defaultImage,
-      });
-
-      setShowChangePhotoModal(false);
+      if (success) {
+        setProfileImage(defaultImage);
+        setShowChangePhotoModal(false);
+      }
     } catch (error) {
       console.error("Error removing photo:", error);
       setFormError("Failed to remove profile picture");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -130,7 +140,8 @@ const EditProfile: React.FC = () => {
     }
 
     setFormError(null);
-    setIsLoading(true);
+    clearError();
+    setIsSubmitting(true);
 
     try {
       // Validate required fields
@@ -144,24 +155,34 @@ const EditProfile: React.FC = () => {
         return;
       }
 
-      // Update user profile in context and localStorage
-      updateUserProfile({
+      // Prepare the update data
+      const updateData = {
         fullName: formData.fullName.trim(),
         userName: formData.userName.trim(),
-        username: formData.userName.trim(), // For backward compatibility
         bio: formData.bio.trim(),
         website: formData.website.trim(),
         gender: formData.gender,
         profilePicture: profileImage,
-      });
+      };
 
-      // Navigate back to profile
-      navigate("/profile");
+      console.log("Submitting profile update:", updateData);
+
+      // Call the API to update profile
+      const success = await updateProfile(updateData);
+
+      if (success) {
+        console.log("Profile updated successfully, navigating to profile");
+        // Navigate back to profile on success
+        navigate("/profile");
+      } else {
+        // Error is already set by useProfile hook
+        console.error("Profile update failed");
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
       setFormError("Failed to update profile");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -204,6 +225,21 @@ const EditProfile: React.FC = () => {
     }
   };
 
+  // Refresh profile data on component mount
+  useEffect(() => {
+    const loadProfileData = async () => {
+      try {
+        await refreshProfile();
+      } catch (error) {
+        console.error("Error refreshing profile:", error);
+      }
+    };
+
+    if (user || currentUser) {
+      loadProfileData();
+    }
+  }, []); // Only run once on mount
+
   const displayUsername =
     formData.userName ||
     user?.userName ||
@@ -218,6 +254,9 @@ const EditProfile: React.FC = () => {
   // Ensure profileImage is never empty
   const safeProfileImage = profileImage || defaultImage;
 
+  // Show loading state
+  const isLoading = profileLoading || isSubmitting;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Layout */}
@@ -227,7 +266,8 @@ const EditProfile: React.FC = () => {
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <button
               onClick={handleBack}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              disabled={isLoading}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
             >
               <svg
                 className="w-6 h-6"
@@ -282,7 +322,8 @@ const EditProfile: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setShowChangePhotoModal(true)}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
+                  disabled={isLoading}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:opacity-50"
                 >
                   Change photo
                 </button>
@@ -302,7 +343,8 @@ const EditProfile: React.FC = () => {
                   value={formData.fullName}
                   onChange={handleInputChange}
                   placeholder="Full Name"
-                  className="w-full px-0 py-2 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 placeholder-gray-400"
+                  disabled={isLoading}
+                  className="w-full px-0 py-2 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 placeholder-gray-400 disabled:opacity-50"
                 />
               </div>
 
@@ -317,7 +359,8 @@ const EditProfile: React.FC = () => {
                   value={formData.userName}
                   onChange={handleInputChange}
                   placeholder="Username"
-                  className="w-full px-0 py-2 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 placeholder-gray-400"
+                  disabled={isLoading}
+                  className="w-full px-0 py-2 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 placeholder-gray-400 disabled:opacity-50"
                 />
               </div>
 
@@ -332,7 +375,8 @@ const EditProfile: React.FC = () => {
                   value={formData.website}
                   onChange={handleInputChange}
                   placeholder="Website"
-                  className="w-full px-0 py-2 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 placeholder-gray-400"
+                  disabled={isLoading}
+                  className="w-full px-0 py-2 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 placeholder-gray-400 disabled:opacity-50"
                 />
                 <p className="text-xs text-gray-500 mt-2">
                   Editing your links is only available on mobile. Visit the
@@ -353,7 +397,8 @@ const EditProfile: React.FC = () => {
                   rows={3}
                   maxLength={150}
                   placeholder="Tell people about yourself"
-                  className="w-full px-0 py-2 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 placeholder-gray-400 resize-none"
+                  disabled={isLoading}
+                  className="w-full px-0 py-2 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 placeholder-gray-400 resize-none disabled:opacity-50"
                 />
                 <div className="flex justify-end mt-1">
                   <span className="text-xs text-gray-500">
@@ -371,7 +416,8 @@ const EditProfile: React.FC = () => {
                   name="gender"
                   value={formData.gender}
                   onChange={handleInputChange}
-                  className="w-full px-0 py-2 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 text-gray-900"
+                  disabled={isLoading}
+                  className="w-full px-0 py-2 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 text-gray-900 disabled:opacity-50"
                 >
                   <option value="">Not specified</option>
                   <option value="male">Male</option>
@@ -409,6 +455,7 @@ const EditProfile: React.FC = () => {
                       onChange={(e) =>
                         setShowAccountSuggestions(e.target.checked)
                       }
+                      disabled={isLoading}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -468,7 +515,8 @@ const EditProfile: React.FC = () => {
                   <h1 className="text-2xl font-semibold">Edit Profile</h1>
                   <button
                     onClick={handleBack}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    disabled={isLoading}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -498,7 +546,8 @@ const EditProfile: React.FC = () => {
                     <p className="text-gray-500 text-sm">{displayFullName}</p>
                     <button
                       onClick={() => setShowChangePhotoModal(true)}
-                      className="text-blue-500 font-semibold text-sm mt-1 hover:underline"
+                      disabled={isLoading}
+                      className="text-blue-500 font-semibold text-sm mt-1 hover:underline disabled:opacity-50"
                     >
                       Change photo
                     </button>
@@ -518,7 +567,8 @@ const EditProfile: React.FC = () => {
                         value={formData.fullName}
                         onChange={handleInputChange}
                         placeholder="Full Name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
                       />
                     </div>
                   </div>
@@ -534,7 +584,8 @@ const EditProfile: React.FC = () => {
                         value={formData.userName}
                         onChange={handleInputChange}
                         placeholder="Username"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
                       />
                     </div>
                   </div>
@@ -550,7 +601,8 @@ const EditProfile: React.FC = () => {
                         value={formData.website}
                         onChange={handleInputChange}
                         placeholder="Website"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
                       />
                     </div>
                   </div>
@@ -567,7 +619,8 @@ const EditProfile: React.FC = () => {
                         rows={3}
                         maxLength={150}
                         placeholder="Tell people about yourself"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50"
                       />
                       <div className="flex justify-end mt-1">
                         <span className="text-xs text-gray-500">
@@ -586,7 +639,8 @@ const EditProfile: React.FC = () => {
                         name="gender"
                         value={formData.gender}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
                       >
                         <option value="">Not specified</option>
                         <option value="male">Male</option>

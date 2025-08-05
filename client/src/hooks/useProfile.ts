@@ -1,21 +1,18 @@
 import { useState } from "react";
 import { useAuthContext } from "../context/AuthContext";
-
-export interface UpdateProfileData {
-  fullName?: string;
-  userName?: string;
-  bio?: string;
-  website?: string;
-  profilePicture?: string;
-  gender?: string;
-}
+import {
+  profileService,
+  type UpdateProfileData,
+} from "../services/api/profileService";
 
 interface UseProfileReturn {
   updateProfile: (data: UpdateProfileData) => Promise<boolean>;
   uploadProfilePicture: (file: File) => Promise<string | null>;
   removeProfilePicture: () => Promise<boolean>;
+  refreshProfile: () => Promise<boolean>;
   isLoading: boolean;
   error: string | null;
+  clearError: () => void;
 }
 
 export const useProfile = (): UseProfileReturn => {
@@ -23,45 +20,47 @@ export const useProfile = (): UseProfileReturn => {
   const [error, setError] = useState<string | null>(null);
   const { user, updateUserProfile } = useAuthContext();
 
+  const clearError = () => setError(null);
+
   const updateProfile = async (data: UpdateProfileData): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       if (!user) {
         setError("User not found");
         return false;
       }
 
-      // Validate required fields
-      if (data.fullName !== undefined && !data.fullName.trim()) {
-        setError("Full name is required");
+      console.log("Updating profile with data:", data);
+
+      // Call the real API
+      const result = await profileService.updateProfile(data);
+
+      if (result.success) {
+        // Update the user in context immediately
+        updateUserProfile({
+          fullName: data.fullName || user.fullName,
+          userName: data.userName || user.userName || user.username,
+          username: data.userName || user.userName || user.username, // For backward compatibility
+          bio: data.bio || user.bio,
+          website: data.website || user.website,
+          profilePicture: data.profilePicture || user.profilePicture,
+          gender: data.gender || user.gender,
+        });
+
+        console.log("Profile updated successfully");
+        return true;
+      } else {
+        setError(result.message || "Failed to update profile");
+        console.error("Profile update failed:", result.error);
         return false;
       }
-
-      if (data.userName !== undefined && !data.userName.trim()) {
-        setError("Username is required");
-        return false;
-      }
-
-      // Update the user in context and localStorage using the context method
-      updateUserProfile({
-        fullName: data.fullName || user.fullName,
-        userName: data.userName || user.userName || user.username,
-        bio: data.bio || user.bio,
-        website: data.website || user.website,
-        profilePicture: data.profilePicture || user.profilePicture,
-        gender: data.gender || user.gender,
-      });
-
-      return true;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to update profile";
       setError(errorMessage);
+      console.error("Profile update error:", err);
       return false;
     } finally {
       setIsLoading(false);
@@ -73,39 +72,34 @@ export const useProfile = (): UseProfileReturn => {
     setError(null);
 
     try {
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        setError("Please select an image file");
-        return null;
-      }
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Please select an image smaller than 5MB");
-        return null;
-      }
-
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       if (!user) {
         setError("User not found");
         return null;
       }
 
-      // Create a local URL for the uploaded image
-      const imageUrl = URL.createObjectURL(file);
+      console.log("Uploading profile picture:", file.name);
 
-      // Update the user's profile picture using the context method
-      updateUserProfile({
-        profilePicture: imageUrl,
-      });
+      // Call the real API
+      const result = await profileService.uploadProfilePicture(file);
 
-      return imageUrl;
+      if (result.success && result.data?.url) {
+        // Update the user's profile picture using the context method
+        updateUserProfile({
+          profilePicture: result.data.url,
+        });
+
+        console.log("Profile picture uploaded successfully");
+        return result.data.url;
+      } else {
+        setError(result.message || "Failed to upload profile picture");
+        console.error("Profile picture upload failed:", result.error);
+        return null;
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to upload profile picture";
       setError(errorMessage);
+      console.error("Profile picture upload error:", err);
       return null;
     } finally {
       setIsLoading(false);
@@ -117,27 +111,73 @@ export const useProfile = (): UseProfileReturn => {
     setError(null);
 
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       if (!user) {
         setError("User not found");
         return false;
       }
 
-      // Set profile picture to default using the context method
-      const defaultImage =
-        "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541";
+      console.log("Removing profile picture");
 
-      updateUserProfile({
-        profilePicture: defaultImage,
-      });
+      // Call the real API
+      const result = await profileService.removeProfilePicture();
 
-      return true;
+      if (result.success) {
+        // Set profile picture to default using the context method
+        const defaultImage =
+          "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541";
+
+        updateUserProfile({
+          profilePicture: defaultImage,
+        });
+
+        console.log("Profile picture removed successfully");
+        return true;
+      } else {
+        setError(result.message || "Failed to remove profile picture");
+        console.error("Profile picture removal failed:", result.error);
+        return false;
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to remove profile picture";
       setError(errorMessage);
+      console.error("Profile picture removal error:", err);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const refreshProfile = async (): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      if (!user) {
+        setError("User not found");
+        return false;
+      }
+
+      console.log("Refreshing profile data");
+
+      // Get the latest profile data from the API
+      const result = await profileService.getCurrentProfile();
+
+      if (result.success && result.data?.user) {
+        // Update the context with the latest data
+        updateUserProfile(result.data.user);
+        console.log("Profile refreshed successfully");
+        return true;
+      } else {
+        setError(result.message || "Failed to refresh profile");
+        console.error("Profile refresh failed:", result.error);
+        return false;
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to refresh profile";
+      setError(errorMessage);
+      console.error("Profile refresh error:", err);
       return false;
     } finally {
       setIsLoading(false);
@@ -148,7 +188,9 @@ export const useProfile = (): UseProfileReturn => {
     updateProfile,
     uploadProfilePicture,
     removeProfilePicture,
+    refreshProfile,
     isLoading,
     error,
+    clearError,
   };
 };

@@ -1,15 +1,17 @@
-const API_BASE_URL = "https://dif-capstone-project-backend.onrender.com/api";
+const API_BASE_URL = "https://dif-capstone-project-backend.onrender.com";
 
 export interface LoginRequest {
-  email: string;
+  email?: string;
+  phoneNumber?: string;
   password: string;
 }
 
 export interface RegisterRequest {
-  email: string;
-  password: string;
   fullName: string;
-  username: string;
+  userName: string;
+  email?: string;
+  phoneNumber?: string;
+  password: string;
 }
 
 export interface AuthResponse {
@@ -17,9 +19,11 @@ export interface AuthResponse {
   message: string;
   data?: {
     user: {
+      profilePicture: unknown;
       id: string;
-      email: string;
-      username: string;
+      email?: string;
+      phoneNumber?: string;
+      userName: string;
       fullName: string;
     };
     token: string;
@@ -34,15 +38,24 @@ export class AuthService {
     body?: T
   ): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const requestUrl = `${API_BASE_URL}${endpoint}`;
+      const requestBody = body ? JSON.stringify(body) : undefined;
+
+      console.log("Making request to:", requestUrl);
+      console.log("Request body:", requestBody);
+
+      const response = await fetch(requestUrl, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: body ? JSON.stringify(body) : undefined,
+        body: requestBody,
       });
 
       const data = await response.json();
+
+      console.log("Response status:", response.status);
+      console.log("Response data:", data);
 
       if (!response.ok) {
         return {
@@ -67,12 +80,20 @@ export class AuthService {
     }
   }
 
-  async login(credentials: LoginRequest): Promise<AuthResponse> {
-    return this.makeRequest("/auth/login", "POST", credentials);
+  async login(emailOrPhone: string, password: string): Promise<AuthResponse> {
+    const loginData: LoginRequest = {
+      password,
+      ...(emailOrPhone.includes("@")
+        ? { email: emailOrPhone }
+        : { phoneNumber: emailOrPhone }),
+    };
+
+    console.log("Transformed login data:", loginData);
+    return this.makeRequest("/api/auth/login", "POST", loginData);
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    return this.makeRequest("/auth/register", "POST", userData);
+    return this.makeRequest("/api/auth/register", "POST", userData);
   }
 }
 

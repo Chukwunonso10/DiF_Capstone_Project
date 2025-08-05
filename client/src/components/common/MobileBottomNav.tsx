@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface MobileBottomNavProps {
   activeItem?: string;
@@ -7,10 +8,52 @@ interface MobileBottomNavProps {
 }
 
 const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
-  activeItem = "profile",
+  activeItem,
   onItemClick,
   userAvatar = "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=30&h=30&fit=crop&crop=face",
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const getActiveItem = () => {
+    if (activeItem) return activeItem;
+
+    const path = location.pathname;
+    if (path === "/") return "home";
+    if (path === "/explore") return "search";
+    if (path === "/search") return "search";
+    if (path.startsWith("/profile")) return "profile";
+    return "home";
+  };
+
+  const currentActiveItem = getActiveItem();
+
+  const handleItemClick = (itemId: string) => {
+    if (onItemClick) {
+      onItemClick(itemId);
+    }
+
+    switch (itemId) {
+      case "home":
+        navigate("/");
+        break;
+      case "search":
+        navigate("/explore");
+        break;
+      case "create":
+        console.log("Create clicked");
+        break;
+      case "notifications":
+        console.log("Notifications clicked");
+        break;
+      case "profile":
+        navigate("/profile");
+        break;
+      default:
+        break;
+    }
+  };
+
   const navItems = [
     {
       id: "home",
@@ -100,17 +143,17 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   return (
     <>
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
-        <div className="flex justify-between items-center max-w-md mx-auto">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white px-0 py-2 z-50 border-t border-gray-200">
+        <div className="flex justify-between items-center px-4">
           {navItems.map((item) => {
-            const isActive = activeItem === item.id;
+            const isActive = currentActiveItem === item.id;
 
             return (
               <button
                 key={item.id}
-                onClick={() => onItemClick?.(item.id)}
+                onClick={() => handleItemClick(item.id)}
                 className={`p-3 rounded-lg transition-colors ${
-                  isActive ? "text-black" : "text-gray-600 hover:text-black"
+                  isActive ? "text-black" : "text-gray-400 hover:text-black"
                 }`}
               >
                 {item.icon}

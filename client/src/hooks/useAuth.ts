@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { authService } from "../services/api/authService";
+import { useAuthContext } from "../context/AuthContext";
 import {
   type LoginFormData,
   type SignupFormData,
@@ -46,30 +47,43 @@ export const useFormValidation = () => {
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated, setUser, setIsAuthenticated } = useAuthContext();
 
   const login = async (formData: LoginFormData) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await authService.login({
-        email: formData.usernameOrEmail,
-        password: formData.password,
-      });
+      const response = await authService.login(
+        formData.usernameOrEmail,
+        formData.password
+      );
 
       if (response.success && response.data) {
         localStorage.setItem("authToken", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+        const userD = response.data.user;
+        if (!userD.profilePicture) {
+          userD.profilePicture =
+            "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541";
+        }
+        setUser({
+          ...response.data.user,
+          username: response.data.user.userName,
+        });
+
+        localStorage.setItem("user", JSON.stringify(userD));
+
+        setIsAuthenticated(true);
 
         return { success: true, user: response.data.user };
       } else {
         setError(response.message || "Login failed");
         return { success: false, error: response.message };
       }
-    } catch {
-      const errorMessage = "Network error. Please try again.";
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("Network error. Please try again.");
+      return { success: false, error: "Network error. Please try again." };
     } finally {
       setIsLoading(false);
     }
@@ -80,11 +94,27 @@ export const useAuth = () => {
     setError(null);
 
     try {
-      const response = await authService.register(formData);
+      const backendData = {
+        fullName: formData.fullName,
+        userName: formData.username,
+        password: formData.password,
+        ...(formData.email.includes("@")
+          ? { email: formData.email }
+          : { phoneNumber: formData.email }),
+      };
+
+      const response = await authService.register(backendData);
 
       if (response.success && response.data) {
         localStorage.setItem("authToken", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        setUser({
+          ...response.data.user,
+          username: response.data.user.userName,
+        });
+
+        setIsAuthenticated(true);
 
         return { success: true, user: response.data.user };
       } else {
@@ -92,9 +122,8 @@ export const useAuth = () => {
         return { success: false, error: response.message };
       }
     } catch {
-      const errorMessage = "Network error. Please try again.";
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+      setError("Network error. Please try again.");
+      return { success: false, error: "Network error. Please try again." };
     } finally {
       setIsLoading(false);
     }
@@ -103,6 +132,7 @@ export const useAuth = () => {
   const logout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
+    setIsAuthenticated(false);
   };
 
   const getCurrentUser = () => {
@@ -110,18 +140,21 @@ export const useAuth = () => {
     return userStr ? JSON.parse(userStr) : null;
   };
 
-  const isAuthenticated = () => {
+  const checkIsAuthenticated = () => {
     return !!localStorage.getItem("authToken");
   };
+
+  const clearError = () => setError(null);
 
   return {
     login,
     register,
     logout,
     getCurrentUser,
-    isAuthenticated,
+    checkIsAuthenticated,
     isLoading,
     error,
-    clearError: () => setError(null),
+    clearError,
+    isAuthenticated,
   };
 };

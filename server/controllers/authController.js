@@ -294,35 +294,52 @@ const toggleFollow =  async (req, res) =>{
     
   }
 
+const updateProfile = async (req, res) => {
+  try {
+    const { fullName, bio, profilePicture, isPrivate } = req.body
+    const userId = req.user._id
 
+    // Simple validation
+    if (fullName && !fullName.trim()) {
+      return res.status(400).json({ message: "Full name cannot be empty" })
+    }
 
+    if (bio && bio.length > 150) {
+      return res.status(400).json({ message: "Bio cannot exceed 150 characters" })
+    }
 
-//       if (isFollowing){
-//         user.followers.pull(userToFollowId)
-//         userToFollow.following.pull(user._id)
+    const updateData = {}
+    if (fullName !== undefined) updateData.fullName = fullName.trim()
+    if (bio !== undefined) updateData.bio = bio.trim()
+    if (profilePicture !== undefined) updateData.profilePicture = profilePicture
+    if (isPrivate !== undefined) updateData.isPrivate = isPrivate
 
-//         await user.save()
-//         await userToFollow.save()
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true }).select(
+      "-password",
+    )
 
-//         res.status(200).json({ success: true, message: "User unFollowed successfully "})
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" })
+    }
 
-//       }else{
-//         const user = User.findById(user._id)
-//         user.following.push(userToFollowId)
-//         userToFollow.followers.push(user._id)
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: updatedUser,
+    })
+  } catch (error) {
+    console.error("Update profile error:", error)
 
-//         await user.save()
-//         await userToFollow.save()
+    if (error.name === "ValidationError") {
+      const errors = {}
+      Object.keys(error.errors).forEach((key) => {
+        errors[key] = error.errors[key].message
+      })
+      return res.status(400).json({ message: "Validation failed", errors })
+    }
 
-//         res.status(200).json({ success: true, message: "User followed successfully"})
-//       }
-
-     
-
-    
-
-    
-// }
+    res.status(500).json({ message: "Internal server error" })
+  }
+}
 
 module.exports = {
   createUser,
@@ -330,5 +347,6 @@ module.exports = {
   getAllUsers,
   getSingleUser,
   welcome,
-  toggleFollow
+  toggleFollow,
+  updateProfile
 }

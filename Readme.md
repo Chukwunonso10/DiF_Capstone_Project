@@ -1,5 +1,6 @@
 # API Documentation - Posts & Comments
 
+## Base URLs
 - **Posts:** `http://localhost:5000/api/posts`
 - **Comments:** `http://localhost:5000/api/comments`
 
@@ -197,7 +198,7 @@ Authorization: Bearer <your_jwt_token>
 ---
 
 ## 6. Toggle Like Post
-**PATCH** `/api/posts/:id/like`
+**POST** `/api/posts/:id/like` *(Should be PATCH)*
 
 **Authentication:** Required
 
@@ -232,7 +233,7 @@ Authorization: Bearer <your_jwt_token>
 ---
 
 ## 7. Toggle Save Post
-**PATCH** `/api/posts/:id/save`
+**POST** `/api/posts/:id/save` *(Should be PATCH)*
 
 **Authentication:** Required
 
@@ -560,3 +561,41 @@ GET /api/comments/post/64f8a1b2c3d4e5f6a7b8c9d0?page=1&limit=10
 
 ---
 
+# TESTING EXAMPLES
+
+## Postman Collection Setup
+
+### 1. Environment Variables
+Create these variables in Postman:
+- `baseUrl`: `http://localhost:5000`
+- `token`: `<your_jwt_token>`
+
+### 2. Authentication Header
+For protected routes, add header:
+\`\`\`
+Authorization: Bearer {{token}}
+\`\`\`
+
+### 3. Sample Test Flow
+1. **Login** → Get token → Save to environment
+2. **Create Post** → Get post ID from response
+3. **Create Comment** → Use post ID
+4. **Create Reply** → Use comment ID as parentCommentId
+5. **Test all CRUD operations**
+
+---
+
+# NOTES
+
+## Best Practices
+- Always validate ObjectId format before database queries
+- Use pagination for list endpoints to improve performance
+- Implement rate limiting for comment creation to prevent spam
+- Consider implementing comment moderation features
+
+## Future Enhancements
+- Add comment likes/reactions
+- Implement comment reporting system
+- Add comment threading depth limits
+- Add real-time notifications for new comments
+- Implement comment search functionality

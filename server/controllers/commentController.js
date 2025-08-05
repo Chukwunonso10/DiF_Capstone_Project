@@ -44,19 +44,33 @@ const createComment = async (req, res) => {
         console.error("comment create error: " + error.message)
         res.status(500).json({ message: "internal server error "})
     }
+  }
 
+const getAllComment = async (req, res)=>{
+  const { page=1, limit=5 } = req.query
+  const skip = (parseInt(page) - 1) * parseInt(limit)
 
+  
+    try {
+        const comments = await Comment.find()
+                        .populate("user", "userName fullName profilePicture bio")
+                        .populate("post", "content media")
+                        .skip(skip)
+                        .limit(parseInt(limit))
+        const total = await Comment.countDocuments()             
+        if (comments.length == 0) return res.status(200).json({ success: true, message: "No Comment Found", pagination: {pages: 0, total, page:0}, comment: []})
+        
+        res.status(200).json({ success: true, message: "Comment successfully fetched",pagination: {pages: Math.ceil(total/parseInt(limit))}, total, page, comment: comments })
+    } catch (error) {
+        console.error(" Fetch comment Error: " + error.message )
+        res.status(500).json({ message: "internal server error "})
+    }
 
+}
 
-
-
-
-
-
-
-
-
-
+const getCommentByPost = async (req,res) =>{
+  const postId = req.params.id
+}
 
 
 
@@ -112,7 +126,7 @@ const createComment = async (req, res) => {
 //     console.error("Create comment error:", error.message)
 //     res.status(500).json({ message: "Internal server error" })
 //   }
-}
+
 
 // GET COMMENTS FOR A SPECIFIC POST
 const getCommentsByPost = async (req, res) => {
@@ -267,5 +281,6 @@ const deleteComment = async (req, res) => {
 }
 
 module.exports = {
-  createComment
+  createComment,
+  getAllComment
 }

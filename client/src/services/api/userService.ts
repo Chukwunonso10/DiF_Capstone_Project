@@ -130,7 +130,6 @@ export class UserService {
     }
   }
 
-  // New method to get user by username specifically
   async getUserByUsername(username: string): Promise<GetUserResponse> {
     try {
       // Try to get user by username first

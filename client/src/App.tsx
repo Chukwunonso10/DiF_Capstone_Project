@@ -5,6 +5,7 @@ import Login from "./pages/Login/Login";
 import Signup from "./pages/Signup";
 import Home from "./pages/Home/Home";
 import Profile from "./pages/Profile/Profile";
+import EditProfile from "./pages/EditProfile/EditProfile";
 import Explore from "./pages/Explore/Explore";
 import Search from "./pages/Search/Search";
 import OtherUserProfilePage from "./pages/OtherUserProfile/OtherUserProfile";
@@ -84,6 +85,16 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Edit Profile Route */}
+      <Route
+        path="/edit-profile"
+        element={
+          <ProtectedRoute>
+            <EditProfile />
           </ProtectedRoute>
         }
       />

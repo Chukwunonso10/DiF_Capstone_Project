@@ -7,6 +7,8 @@ interface AuthContextType {
   isLoading: boolean;
   setUser: (user: User | null) => void;
   setIsAuthenticated: (auth: boolean) => void;
+  updateUserProfile: (updates: Partial<User>) => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,7 +44,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error("Error checking auth status:", error);
-
         localStorage.removeItem("authToken");
         localStorage.removeItem("user");
       } finally {
@@ -53,12 +54,59 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuthStatus();
   }, []);
 
+  // Enhanced setUser function that also updates localStorage
+  const handleSetUser = (userData: User | null) => {
+    setUser(userData);
+
+    if (userData) {
+      localStorage.setItem("user", JSON.stringify(userData));
+      setIsAuthenticated(true);
+    } else {
+      localStorage.removeItem("user");
+      setIsAuthenticated(false);
+    }
+  };
+
+  // Fixed function to update user profile data - prevents infinite loops
+  const updateUserProfile = (updates: Partial<User>) => {
+    setUser((currentUser) => {
+      if (!currentUser) return null;
+
+      // Create updated user object
+      const updatedUser = {
+        ...currentUser,
+        ...updates,
+      };
+
+      // Only update localStorage if user data actually changed
+      const currentUserStr = JSON.stringify(currentUser);
+      const updatedUserStr = JSON.stringify(updatedUser);
+
+      if (currentUserStr !== updatedUserStr) {
+        localStorage.setItem("user", updatedUserStr);
+      }
+
+      return updatedUser;
+    });
+  };
+
+  // New logout function
+  const logout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("userData");
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
   const value = {
     user,
     isAuthenticated,
     isLoading,
-    setUser,
+    setUser: handleSetUser,
     setIsAuthenticated,
+    updateUserProfile,
+    logout,
   };
 
   if (isLoading) {

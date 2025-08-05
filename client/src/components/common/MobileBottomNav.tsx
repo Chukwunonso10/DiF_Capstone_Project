@@ -41,11 +41,9 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         navigate("/explore");
         break;
       case "create":
-        // TODO: Implement create functionality
         console.log("Create clicked");
         break;
       case "notifications":
-        // TODO: Implement notifications functionality
         console.log("Notifications clicked");
         break;
       case "profile":

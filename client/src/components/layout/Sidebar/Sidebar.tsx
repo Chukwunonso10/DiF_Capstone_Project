@@ -15,6 +15,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeItem = "home",
   onItemClick,
   isCollapsed = false,
+  userAvatar,
 }) => {
   const [showSearchSidebar, setShowSearchSidebar] = useState(false);
   const location = useLocation();
@@ -23,11 +24,17 @@ const Sidebar: React.FC<SidebarProps> = ({
   const { getCurrentUser } = useAuth();
   const currentUser = getCurrentUser();
 
-  const { setUser, setIsAuthenticated } = useAuthContext();
+  const { user, setUser, setIsAuthenticated } = useAuthContext();
 
-  const userAvatar =
-    currentUser?.profilePicture ||
+  const defaultAvatar =
     "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541";
+
+  // Ensure we have a safe avatar URL
+  const safeUserAvatar =
+    userAvatar ||
+    user?.profilePicture ||
+    currentUser?.profilePicture ||
+    defaultAvatar;
 
   const menuItems = [
     {
@@ -185,9 +192,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       icon: (
         <div className="w-7 h-7 rounded-full overflow-hidden">
           <img
-            src={userAvatar}
+            src={safeUserAvatar}
             alt="Profile"
             className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = defaultAvatar;
+            }}
           />
         </div>
       ),

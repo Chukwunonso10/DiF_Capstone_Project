@@ -25,9 +25,20 @@ export interface User {
   id: string;
   username: string;
   fullName: string;
-  userName?: string;
+  userName?: string; // For backward compatibility
   email?: string;
   phoneNumber?: string;
+  profilePicture?: string;
+  bio?: string;
+  website?: string;
+  gender?: string;
+  isPrivate?: boolean;
+  isVerified?: boolean;
+  followersCount?: number;
+  followingCount?: number;
+  postsCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const VALIDATION_RULES = {

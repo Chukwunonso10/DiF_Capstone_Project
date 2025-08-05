@@ -1,75 +1,78 @@
-export interface UserProfile {
-  id: string;
-  username: string;
-  displayName: string;
-  bio: string;
-  avatar: string;
-  postsCount: number;
-  followersCount: number;
-  followingCount: number;
-  isVerified: boolean;
-  isPrivate: boolean;
-  website?: string;
-  isFollowing?: boolean;
-  isOwnProfile: boolean;
+export interface LoginFormData {
+  usernameOrEmail: string;
+  password: string;
 }
 
-export interface OtherUserProfile {
-  id: string;
-  username: string;
-  displayName: string;
+export interface SignupFormData {
+  email: string;
   fullName: string;
+  username: string;
+  password: string;
+}
+
+export interface FormErrors {
+  [key: string]: string;
+}
+
+export interface AuthState {
+  isLoading: boolean;
+  error: string | null;
+  user: User | null;
+  isAuthenticated: boolean;
+}
+
+export interface User {
+  id: string;
+  username: string;
+  fullName: string;
+  userName?: string; // For backward compatibility
+  email?: string;
+  phoneNumber?: string;
+  profilePicture?: string;
   bio?: string;
-  avatar: string;
-  postsCount: number;
-  followersCount: number;
-  followingCount: number;
-  isVerified: boolean;
-  isPrivate: boolean;
   website?: string;
-  isFollowing: boolean;
-  posts: Array<{
-    id: string;
-    image: string;
-    isVideo?: boolean;
-    isMultiple?: boolean;
-  }>;
-  highlights: Array<{
-    id: string;
-    image: string;
-    title: string;
-  }>;
+  gender?: string;
+  isPrivate?: boolean;
+  isVerified?: boolean;
+  followersCount?: number;
+  followingCount?: number;
+  postsCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface ProfileHighlight {
-  id: number;
-  name: string;
-  image: string;
-  isNew?: boolean;
-  storyCount?: number;
-}
-
-export interface ProfilePost {
-  id: number;
-  image: string;
-  type: "image" | "video" | "carousel";
-  likesCount?: number;
-  commentsCount?: number;
-}
-
-export interface ProfileStats {
-  posts: number;
-  followers: number;
-  following: number;
-}
-
-export interface FollowAction {
-  userId: string;
-  isFollowing: boolean;
-}
-
-export interface UserInteraction {
-  userId: string;
-  type: "follow" | "unfollow" | "message" | "block" | "report";
-  timestamp: number;
-}
+export const VALIDATION_RULES = {
+  email: {
+    required: "Email or phone number is required",
+    pattern: {
+      value: /^([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|[0-9]{10,15})$/i,
+      message: "Please enter a valid email or phone number",
+    },
+  },
+  password: {
+    required: "Password is required",
+    minLength: {
+      value: 6,
+      message: "Password must be at least 6 characters",
+    },
+  },
+  fullName: {
+    required: "Full name is required",
+    minLength: {
+      value: 2,
+      message: "Full name must be at least 2 characters",
+    },
+  },
+  username: {
+    required: "Username is required",
+    minLength: {
+      value: 3,
+      message: "Username must be at least 3 characters",
+    },
+    pattern: {
+      value: /^[a-zA-Z0-9_.]+$/,
+      message:
+        "Username can only contain letters, numbers, dots, and underscores",
+    },
+  },
+};

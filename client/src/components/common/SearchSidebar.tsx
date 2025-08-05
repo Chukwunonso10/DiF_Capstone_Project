@@ -67,13 +67,11 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
   const handleUserClick = (user: ApiUser) => {
     addToRecentSearches(user);
 
-    // Navigate to user profile
     navigate(`/user/${user.userName}`);
     onClose();
   };
 
   const handleRecentSearchClick = (search: (typeof recentSearches)[0]) => {
-    // Navigate to user profile
     navigate(`/user/${search.username}`);
     onClose();
   };

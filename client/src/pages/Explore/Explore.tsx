@@ -106,9 +106,6 @@ const Explore: React.FC = () => {
       <div className="lg:ml-80 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 lg:px-12">
           <div className="pt-8">
-            {/* <h1 className="text-2xl font-bold mb-6">Explore</h1> */}
-
-            {/* Wider Grid Layout */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1">
               {exploreItems.map((item, index) => {
                 const isLarge = index % 7 === 0;

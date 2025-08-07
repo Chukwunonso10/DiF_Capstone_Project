@@ -25,7 +25,7 @@ export interface User {
   id: string;
   username: string;
   fullName: string;
-  userName?: string; // For backward compatibility
+  userName?: string;
   email?: string;
   phoneNumber?: string;
   profilePicture?: string;

@@ -25,7 +25,6 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      {/* Public Routes */}
       <Route
         path="/login"
         element={
@@ -43,7 +42,6 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* Protected Routes */}
       <Route
         path="/"
         element={
@@ -89,7 +87,6 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* Edit Profile Route */}
       <Route
         path="/edit-profile"
         element={
@@ -99,7 +96,6 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* New route for viewing other users' profiles */}
       <Route
         path="/user/:username"
         element={
@@ -109,7 +105,6 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* Fallback route */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

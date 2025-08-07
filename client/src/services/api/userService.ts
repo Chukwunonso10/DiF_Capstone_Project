@@ -37,7 +37,13 @@ export interface GetUserResponse {
 
 export class UserService {
   private getAuthToken(): string | null {
-    return localStorage.getItem("authToken");
+    // Try multiple possible token keys
+    return (
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      localStorage.getItem("jwt") ||
+      localStorage.getItem("accessToken")
+    );
   }
 
   private async makeRequest<T>(
@@ -49,11 +55,15 @@ export class UserService {
       const token = this.getAuthToken();
 
       if (!token) {
-        throw new Error("No authentication token found");
+        throw new Error("No authentication token found. Please log in again.");
       }
 
       const requestUrl = `${API_BASE_URL}${endpoint}`;
       console.log("Making request to:", requestUrl);
+      console.log(
+        "Using token:",
+        token ? `${token.substring(0, 10)}...` : "None"
+      );
 
       const response = await fetch(requestUrl, {
         method,
@@ -64,17 +74,25 @@ export class UserService {
         body: body ? JSON.stringify(body) : undefined,
       });
 
-      const data = await response.json();
-
       console.log("Response status:", response.status);
-      console.log("Response data:", data);
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("jwt");
+          localStorage.removeItem("accessToken");
+          throw new Error("Authentication failed. Please log in again.");
+        }
+
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          data.message || `HTTP error! status: ${response.status}`
+          errorData.message || `HTTP error! status: ${response.status}`
         );
       }
 
+      const data = await response.json();
+      console.log("Response data:", data);
       return data;
     } catch (error) {
       console.error("API Error:", error);
@@ -118,7 +136,7 @@ export class UserService {
       return {
         success: true,
         message: "User fetched successfully",
-        data: response as ApiUser, // because the whole response IS the user
+        data: response as ApiUser,
       };
     } catch (error) {
       return {
@@ -132,7 +150,6 @@ export class UserService {
 
   async getUserByUsername(username: string): Promise<GetUserResponse> {
     try {
-      // Try to get user by username first
       const response = await this.makeRequest<GetUserResponse>(
         `/api/auth/getme/${username}`
       );
@@ -145,22 +162,6 @@ export class UserService {
           data: response.data,
         };
       }
-
-      // If direct username lookup fails, try to find in all users
-      // const allUsersResponse = await this.getAllUsers();
-      // if (allUsersResponse.success && allUsersResponse.users) {
-      //   const user = allUsersResponse.users.find(
-      //     (u) => u.userName.toLowerCase() === username.toLowerCase()
-      //   );
-
-      //   if (user) {
-      //     return {
-      //       success: true,
-      //       message: "User found successfully",
-      //       data: user,
-      //     };
-      //   }
-      // }
 
       return {
         success: false,
@@ -212,6 +213,17 @@ export class UserService {
         user.userName.toLowerCase().includes(searchTerm) ||
         (user.email && user.email.toLowerCase().includes(searchTerm))
     );
+  }
+
+  isAuthenticated(): boolean {
+    return !!this.getAuthToken();
+  }
+
+  clearAuth(): void {
+    localStorage.removeItem("token");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("accessToken");
   }
 }
 

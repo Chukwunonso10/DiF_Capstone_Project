@@ -57,8 +57,6 @@ export const useUserProfile = (username: string): UseUserProfileReturn => {
         const transformedUser = userService.transformApiUser(apiUser);
         console.log("Tranform user details: ", transformedUser);
 
-        // Mock data for posts and additional profile info
-        // In a real app, you'd fetch this from separate endpoints
         const mockPosts = [
           {
             id: "1",

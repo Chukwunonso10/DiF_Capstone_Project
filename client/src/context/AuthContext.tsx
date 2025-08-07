@@ -54,7 +54,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  // Enhanced setUser function that also updates localStorage
   const handleSetUser = (userData: User | null) => {
     setUser(userData);
 
@@ -67,18 +66,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Fixed function to update user profile data - prevents infinite loops
   const updateUserProfile = (updates: Partial<User>) => {
     setUser((currentUser) => {
       if (!currentUser) return null;
 
-      // Create updated user object
       const updatedUser = {
         ...currentUser,
         ...updates,
       };
 
-      // Only update localStorage if user data actually changed
       const currentUserStr = JSON.stringify(currentUser);
       const updatedUserStr = JSON.stringify(updatedUser);
 
@@ -90,7 +86,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
   };
 
-  // New logout function
   const logout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");

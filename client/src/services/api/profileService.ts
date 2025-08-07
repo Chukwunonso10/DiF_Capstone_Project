@@ -73,7 +73,6 @@ export class ProfileService {
         Authorization: `Bearer ${token}`,
       };
 
-      // Only add Content-Type for JSON data, not FormData
       if (!(body instanceof FormData)) {
         headers["Content-Type"] = "application/json";
       }
@@ -113,12 +112,10 @@ export class ProfileService {
     }
   }
 
-  // Update user profile using the real API endpoint
   async updateProfile(
     profileData: UpdateProfileData
   ): Promise<UpdateProfileResponse> {
     try {
-      // Validate required fields before making the API call
       if (profileData.fullName !== undefined && !profileData.fullName.trim()) {
         return {
           success: false,
@@ -135,17 +132,15 @@ export class ProfileService {
         };
       }
 
-      // Prepare the payload according to API documentation
       const apiPayload = {
         FullName: profileData.fullName,
-        UsernName: profileData.userName, // Note: API expects 'UsernName' (typo in API)
+        UsernName: profileData.userName,
         Bio: profileData.bio,
         Profilepicture: profileData.profilePicture,
         Website: profileData.website,
         Gender: profileData.gender,
       };
 
-      // Remove undefined values
       const cleanPayload = Object.fromEntries(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         Object.entries(apiPayload).filter(([_, value]) => value !== undefined)
@@ -159,12 +154,11 @@ export class ProfileService {
         cleanPayload
       );
 
-      // Update local storage immediately for persistence
       if (response.success) {
         this.updateStoredUser({
           fullName: profileData.fullName,
           userName: profileData.userName,
-          username: profileData.userName, // For backward compatibility
+          username: profileData.userName,
           bio: profileData.bio,
           website: profileData.website,
           profilePicture: profileData.profilePicture,
@@ -188,11 +182,8 @@ export class ProfileService {
     }
   }
 
-  // Upload profile picture - since no specific endpoint is provided for image upload,
-  // we'll use the profile update endpoint with the image URL
   async uploadProfilePicture(file: File): Promise<UploadImageResponse> {
     try {
-      // Validate file type
       if (!file.type.startsWith("image/")) {
         return {
           success: false,
@@ -201,7 +192,6 @@ export class ProfileService {
         };
       }
 
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         return {
           success: false,
@@ -210,11 +200,8 @@ export class ProfileService {
         };
       }
 
-      // For now, create a local URL and update profile
-      // In a real scenario, you'd upload to a file service first
       const imageUrl = URL.createObjectURL(file);
 
-      // Update profile with new image URL
       const updateResult = await this.updateProfile({
         profilePicture: imageUrl,
       });
@@ -245,7 +232,6 @@ export class ProfileService {
     }
   }
 
-  // Remove profile picture by setting it to default
   async removeProfilePicture(): Promise<UpdateProfileResponse> {
     try {
       const defaultImage =
@@ -274,7 +260,6 @@ export class ProfileService {
     }
   }
 
-  // Get current user profile (optional - for fetching latest data)
   async getCurrentProfile(): Promise<UpdateProfileResponse> {
     try {
       const response = await this.makeRequest<UpdateProfileResponse>(
@@ -282,7 +267,6 @@ export class ProfileService {
         "GET"
       );
 
-      // Update local storage with latest data
       if (response.success && response.data?.user) {
         this.updateStoredUser(response.data.user);
       }

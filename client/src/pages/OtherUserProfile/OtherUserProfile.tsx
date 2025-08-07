@@ -18,18 +18,14 @@ const OtherUserProfilePage: React.FC = () => {
     if (!userProfile) return;
 
     try {
-      // TODO: Implement actual follow/unfollow API call
       console.log("Following/unfollowing user:", userProfile.username);
 
-      // For now, just refetch the profile to simulate the change
-      // In a real app, you'd make an API call here
       refetch();
     } catch (error) {
       console.error("Error following/unfollowing user:", error);
     }
   };
 
-  // Redirect if trying to view own profile
   if (currentUser && username === currentUser.username) {
     navigate("/profile", { replace: true });
     return null;
@@ -110,7 +106,6 @@ const OtherUserProfilePage: React.FC = () => {
     <OtherUserProfile
       userProfile={userProfile}
       onFollowUser={handleFollowUser}
-      // currentUserAvatar={currentUser?.avatar || currentUser?.profileImage || "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face"}
     />
   );
 };

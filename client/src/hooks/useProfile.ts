@@ -34,15 +34,13 @@ export const useProfile = (): UseProfileReturn => {
 
       console.log("Updating profile with data:", data);
 
-      // Call the real API
       const result = await profileService.updateProfile(data);
 
       if (result.success) {
-        // Update the user in context immediately
         updateUserProfile({
           fullName: data.fullName || user.fullName,
           userName: data.userName || user.userName || user.username,
-          username: data.userName || user.userName || user.username, // For backward compatibility
+          username: data.userName || user.userName || user.username,
           bio: data.bio || user.bio,
           website: data.website || user.website,
           profilePicture: data.profilePicture || user.profilePicture,
@@ -79,11 +77,9 @@ export const useProfile = (): UseProfileReturn => {
 
       console.log("Uploading profile picture:", file.name);
 
-      // Call the real API
       const result = await profileService.uploadProfilePicture(file);
 
       if (result.success && result.data?.url) {
-        // Update the user's profile picture using the context method
         updateUserProfile({
           profilePicture: result.data.url,
         });
@@ -118,11 +114,9 @@ export const useProfile = (): UseProfileReturn => {
 
       console.log("Removing profile picture");
 
-      // Call the real API
       const result = await profileService.removeProfilePicture();
 
       if (result.success) {
-        // Set profile picture to default using the context method
         const defaultImage =
           "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541";
 
@@ -160,11 +154,9 @@ export const useProfile = (): UseProfileReturn => {
 
       console.log("Refreshing profile data");
 
-      // Get the latest profile data from the API
       const result = await profileService.getCurrentProfile();
 
       if (result.success && result.data?.user) {
-        // Update the context with the latest data
         updateUserProfile(result.data.user);
         console.log("Profile refreshed successfully");
         return true;

@@ -48,7 +48,6 @@ const EditProfile: React.FC = () => {
   const defaultImage =
     "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541";
 
-  // Initialize form data and profile image
   useEffect(() => {
     const userData = user || currentUser;
     if (userData) {
@@ -62,7 +61,6 @@ const EditProfile: React.FC = () => {
 
       const newProfileImage = userData.profilePicture || defaultImage;
 
-      // Only update if data has actually changed to prevent infinite loops
       setFormData((prev) => {
         if (JSON.stringify(prev) !== JSON.stringify(newFormData)) {
           return newFormData;
@@ -76,7 +74,6 @@ const EditProfile: React.FC = () => {
     }
   }, [user?.id, currentUser?.id]);
 
-  // Clear errors when profile error changes
   useEffect(() => {
     if (profileError) {
       setFormError(profileError);
@@ -93,7 +90,7 @@ const EditProfile: React.FC = () => {
       ...prev,
       [name]: value,
     }));
-    // Clear any existing errors when user starts typing
+
     if (formError) {
       setFormError(null);
       clearError();
@@ -144,7 +141,6 @@ const EditProfile: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Validate required fields
       if (!formData.fullName.trim()) {
         setFormError("Full name is required");
         return;
@@ -155,7 +151,6 @@ const EditProfile: React.FC = () => {
         return;
       }
 
-      // Prepare the update data
       const updateData = {
         fullName: formData.fullName.trim(),
         userName: formData.userName.trim(),
@@ -167,15 +162,13 @@ const EditProfile: React.FC = () => {
 
       console.log("Submitting profile update:", updateData);
 
-      // Call the API to update profile
       const success = await updateProfile(updateData);
 
       if (success) {
         console.log("Profile updated successfully, navigating to profile");
-        // Navigate back to profile on success
+
         navigate("/profile");
       } else {
-        // Error is already set by useProfile hook
         console.error("Profile update failed");
       }
     } catch (error) {
@@ -197,7 +190,6 @@ const EditProfile: React.FC = () => {
   const handleSidebarItemClick = (item: string) => {
     console.log("Sidebar item clicked:", item);
 
-    // Handle navigation from sidebar
     switch (item) {
       case "home":
         navigate("/");
@@ -225,7 +217,6 @@ const EditProfile: React.FC = () => {
     }
   };
 
-  // Refresh profile data on component mount
   useEffect(() => {
     const loadProfileData = async () => {
       try {
@@ -238,7 +229,7 @@ const EditProfile: React.FC = () => {
     if (user || currentUser) {
       loadProfileData();
     }
-  }, []); // Only run once on mount
+  }, []);
 
   const displayUsername =
     formData.userName ||
@@ -251,18 +242,14 @@ const EditProfile: React.FC = () => {
   const displayFullName =
     formData.fullName || user?.fullName || currentUser?.fullName || "";
 
-  // Ensure profileImage is never empty
   const safeProfileImage = profileImage || defaultImage;
 
-  // Show loading state
   const isLoading = profileLoading || isSubmitting;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Layout */}
       <div className="lg:hidden">
         <div className="w-full bg-white min-h-screen">
-          {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <button
               onClick={handleBack}
@@ -293,16 +280,13 @@ const EditProfile: React.FC = () => {
             </button>
           </div>
 
-          {/* Content */}
           <div className="bg-white">
-            {/* Error Display */}
             {formError && (
               <div className="mx-4 mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
                 {formError}
               </div>
             )}
 
-            {/* Profile Photo Section */}
             <div className="p-6 bg-gray-100">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -330,9 +314,7 @@ const EditProfile: React.FC = () => {
               </div>
             </div>
 
-            {/* Form Fields */}
             <div className="divide-y divide-gray-200">
-              {/* Name */}
               <div className="p-4">
                 <label className="block text-sm font-medium text-gray-900 mb-2">
                   Name
@@ -348,7 +330,6 @@ const EditProfile: React.FC = () => {
                 />
               </div>
 
-              {/* Username */}
               <div className="p-4">
                 <label className="block text-sm font-medium text-gray-900 mb-2">
                   Username
@@ -364,7 +345,6 @@ const EditProfile: React.FC = () => {
                 />
               </div>
 
-              {/* Website */}
               <div className="p-4">
                 <label className="block text-sm font-medium text-gray-900 mb-2">
                   Website
@@ -385,7 +365,6 @@ const EditProfile: React.FC = () => {
                 </p>
               </div>
 
-              {/* Bio */}
               <div className="p-4">
                 <label className="block text-sm font-medium text-gray-900 mb-2">
                   Bio
@@ -407,7 +386,6 @@ const EditProfile: React.FC = () => {
                 </div>
               </div>
 
-              {/* Gender */}
               <div className="p-4">
                 <label className="block text-sm font-medium text-gray-900 mb-2">
                   Gender
@@ -431,7 +409,6 @@ const EditProfile: React.FC = () => {
               </div>
             </div>
 
-            {/* Account Suggestions Toggle */}
             <div className="p-4 border-t border-gray-200">
               <div className="mb-4">
                 <h3 className="font-medium text-gray-900 mb-2">
@@ -464,7 +441,6 @@ const EditProfile: React.FC = () => {
               </div>
             </div>
 
-            {/* Footer Info */}
             <div className="p-4 border-t border-gray-200 bg-gray-50">
               <p className="text-xs text-gray-500 text-center">
                 Certain profile info, like your name, bio and links, is visible
@@ -475,7 +451,6 @@ const EditProfile: React.FC = () => {
               </p>
             </div>
 
-            {/* Submit Button */}
             <div className="p-4 bg-white">
               <button
                 onClick={handleSubmitClick}
@@ -487,7 +462,6 @@ const EditProfile: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile Bottom Navigation */}
           <MobileBottomNav
             activeItem="profile"
             onItemClick={handleSidebarItemClick}
@@ -496,20 +470,16 @@ const EditProfile: React.FC = () => {
         </div>
       </div>
 
-      {/* Desktop Layout */}
       <div className="hidden lg:block relative">
-        {/* Sidebar */}
         <Sidebar
           activeItem="profile"
           onItemClick={handleSidebarItemClick}
           userAvatar={safeProfileImage}
         />
 
-        {/* Main Content */}
         <div className="transition-all duration-300 ease-out ml-80">
           <div className="max-w-2xl mx-auto py-12">
             <div className="bg-white rounded-lg shadow-sm">
-              {/* Header */}
               <div className="px-8 py-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <h1 className="text-2xl font-semibold">Edit Profile</h1>
@@ -523,16 +493,13 @@ const EditProfile: React.FC = () => {
                 </div>
               </div>
 
-              {/* Content */}
               <div className="p-8">
-                {/* Error Display */}
                 {formError && (
                   <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
                     {formError}
                   </div>
                 )}
 
-                {/* Profile Photo Section */}
                 <div className="flex items-center mb-8">
                   <img
                     src={safeProfileImage}
@@ -554,7 +521,6 @@ const EditProfile: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-3 gap-4 items-center">
                     <label className="text-right font-medium text-gray-700">
@@ -672,7 +638,6 @@ const EditProfile: React.FC = () => {
         </div>
       </div>
 
-      {/* Change Photo Modal */}
       <ChangeProfilePhotoModal
         isOpen={showChangePhotoModal}
         onClose={() => setShowChangePhotoModal(false)}

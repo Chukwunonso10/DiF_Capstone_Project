@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/services/api/userService.ts
+
 const API_BASE_URL = "https://dif-capstone-project-backend.onrender.com";
 
 export interface ApiUser {
@@ -9,8 +12,8 @@ export interface ApiUser {
   phoneNumber?: string;
   createdAt?: string;
   updatedAt?: string;
-  followers?: [];
-  following?: [];
+  followers?: string[];
+  following?: string[];
   profilePicture?: string;
 }
 
@@ -35,9 +38,22 @@ export interface GetUserResponse {
   error?: string;
 }
 
+export interface FollowResponse {
+  success: boolean;
+  message: string;
+  isFollowing?: boolean;
+  updatedUser?: ApiUser; // Add updated user data
+  error?: string;
+}
+
 export class UserService {
   private getAuthToken(): string | null {
-    return localStorage.getItem("authToken");
+    return (
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      localStorage.getItem("jwt") ||
+      localStorage.getItem("accessToken")
+    );
   }
 
   private async makeRequest<T>(
@@ -49,11 +65,15 @@ export class UserService {
       const token = this.getAuthToken();
 
       if (!token) {
-        throw new Error("No authentication token found");
+        throw new Error("No authentication token found. Please log in again.");
       }
 
       const requestUrl = `${API_BASE_URL}${endpoint}`;
       console.log("Making request to:", requestUrl);
+      console.log(
+        "Using token:",
+        token ? `${token.substring(0, 10)}...` : "None"
+      );
 
       const response = await fetch(requestUrl, {
         method,
@@ -64,17 +84,22 @@ export class UserService {
         body: body ? JSON.stringify(body) : undefined,
       });
 
-      const data = await response.json();
-
       console.log("Response status:", response.status);
-      console.log("Response data:", data);
 
       if (!response.ok) {
+        if (response.status === 401) {
+          this.clearAuth();
+          throw new Error("Authentication failed. Please log in again.");
+        }
+
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          data.message || `HTTP error! status: ${response.status}`
+          errorData.message || `HTTP error! status: ${response.status}`
         );
       }
 
+      const data = await response.json();
+      console.log("Response data:", data);
       return data;
     } catch (error) {
       console.error("API Error:", error);
@@ -84,11 +109,11 @@ export class UserService {
 
   async getAllUsers(): Promise<GetAllUsersResponse> {
     try {
-      const response = await this.makeRequest<GetAllUsersResponse>(
-        "/api/auth/getall"
-      );
+      const response = await this.makeRequest<any>("/api/auth/getall");
 
-      const users = response.users || response.data || [];
+      const users = Array.isArray(response)
+        ? response
+        : response.users || response.data || [];
 
       return {
         success: true,
@@ -109,58 +134,18 @@ export class UserService {
 
   async getUserByIdentifier(identifier: string): Promise<GetUserResponse> {
     try {
-      const response = await this.makeRequest<unknown>(
+      const response = await this.makeRequest<any>(
         `/api/auth/getme/${identifier}`
       );
-      console.log("From API here: ", response);
-      console.log("Username ", identifier);
+      console.log("From API here:", response);
 
-      return {
-        success: true,
-        message: "User fetched successfully",
-        data: response as ApiUser, // because the whole response IS the user
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message:
-          error instanceof Error ? error.message : "Failed to fetch user",
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    }
-  }
-
-  async getUserByUsername(username: string): Promise<GetUserResponse> {
-    try {
-      // Try to get user by username first
-      const response = await this.makeRequest<GetUserResponse>(
-        `/api/auth/getme/${username}`
-      );
-
-      if (response.success && response.data) {
-        console.log(response);
+      if (response && response._id) {
         return {
           success: true,
-          message: response.message || "User fetched successfully",
-          data: response.data,
+          message: "User fetched successfully",
+          data: response as ApiUser,
         };
       }
-
-      // If direct username lookup fails, try to find in all users
-      // const allUsersResponse = await this.getAllUsers();
-      // if (allUsersResponse.success && allUsersResponse.users) {
-      //   const user = allUsersResponse.users.find(
-      //     (u) => u.userName.toLowerCase() === username.toLowerCase()
-      //   );
-
-      //   if (user) {
-      //     return {
-      //       success: true,
-      //       message: "User found successfully",
-      //       data: user,
-      //     };
-      //   }
-      // }
 
       return {
         success: false,
@@ -172,6 +157,33 @@ export class UserService {
         success: false,
         message:
           error instanceof Error ? error.message : "Failed to fetch user",
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  async toggleFollow(userId: string): Promise<FollowResponse> {
+    try {
+      const response = await this.makeRequest<any>(
+        `/api/auth/${userId}`,
+        "PATCH"
+      );
+
+      console.log("Toggle follow response:", response);
+
+      return {
+        success: true,
+        message: response.message || "Follow status updated",
+        isFollowing: response.isFollowing ?? !response.isUnfollowed, // Handle both cases
+        updatedUser: response.user || response.data, // Include updated user data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to update follow status",
         error: error instanceof Error ? error.message : "Unknown error",
       };
     }
@@ -197,7 +209,7 @@ export class UserService {
       avatar:
         apiUser.profilePicture ||
         `https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541`,
-      bio: apiUser.bio,
+      bio: apiUser.bio || "",
     };
   }
 
@@ -212,6 +224,17 @@ export class UserService {
         user.userName.toLowerCase().includes(searchTerm) ||
         (user.email && user.email.toLowerCase().includes(searchTerm))
     );
+  }
+
+  isAuthenticated(): boolean {
+    return !!this.getAuthToken();
+  }
+
+  clearAuth(): void {
+    localStorage.removeItem("token");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("accessToken");
   }
 }
 

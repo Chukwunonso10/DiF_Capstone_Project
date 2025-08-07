@@ -1,3 +1,5 @@
+// src/components/user/OtherUserProfile/OtherUserActions.tsx
+
 import React, { useState } from "react";
 import {
   MessageCircle,
@@ -8,7 +10,7 @@ import {
 
 interface OtherUserActionsProps {
   isFollowing: boolean;
-  onFollow: () => void;
+  onFollow: () => Promise<void>;
   onMessage: () => void;
   onMore?: () => void;
   className?: string;
@@ -21,14 +23,12 @@ const OtherUserActions: React.FC<OtherUserActionsProps> = ({
   onMore,
   className = "",
 }) => {
-  const [isFollowingState, setIsFollowingState] = useState(isFollowing);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFollowClick = async () => {
     setIsLoading(true);
     try {
       await onFollow();
-      setIsFollowingState(!isFollowingState);
     } catch (error) {
       console.error("Error following/unfollowing user:", error);
     } finally {
@@ -43,14 +43,14 @@ const OtherUserActions: React.FC<OtherUserActionsProps> = ({
         onClick={handleFollowClick}
         disabled={isLoading}
         className={`flex-1 lg:flex-none lg:px-8 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 min-w-[100px] ${
-          isFollowingState
+          isFollowing
             ? "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
             : "bg-blue-500 hover:bg-blue-600 text-white"
         } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         {isLoading ? (
           <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-        ) : isFollowingState ? (
+        ) : isFollowing ? (
           <>
             <UserCheck className="w-4 h-4" />
             <span className="hidden sm:inline">Following</span>

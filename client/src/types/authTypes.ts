@@ -10,6 +10,13 @@ export interface SignupFormData {
   password: string;
 }
 
+export interface FollowResponse {
+  success: boolean;
+  message: string;
+  isFollowing: boolean;
+  error?: string;
+}
+
 export interface FormErrors {
   [key: string]: string;
 }
@@ -24,8 +31,8 @@ export interface AuthState {
 export interface User {
   id: string;
   username: string;
+  userName?: string;
   fullName: string;
-  userName?: string; // For backward compatibility
   email?: string;
   phoneNumber?: string;
   profilePicture?: string;
@@ -34,11 +41,12 @@ export interface User {
   gender?: string;
   isPrivate?: boolean;
   isVerified?: boolean;
-  followersCount?: number;
-  followingCount?: number;
+  followersCount: number;
+  followingCount: number;
   postsCount?: number;
   createdAt?: string;
   updatedAt?: string;
+  _id: string;
 }
 
 export const VALIDATION_RULES = {

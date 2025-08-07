@@ -3,34 +3,47 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import { useAuthContext } from "../../context/AuthContext";
 import OtherUserProfile from "../../components/user/OtherUserProfile/OtherUserProfile";
+import { userService } from "../../services/api/userService";
 
 const OtherUserProfilePage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
-  const { user: currentUser } = useAuthContext();
+  const { user: currentUser, updateUserProfile } = useAuthContext();
 
   const { userProfile, isLoading, error, refetch } = useUserProfile(
     username || ""
   );
-  console.log("Error starts here: ", error);
 
-  const handleFollowUser = async () => {
-    if (!userProfile) return;
+  const handleFollowUser = async (userId: string) => {
+    if (!userProfile || !currentUser) return;
 
     try {
-      // TODO: Implement actual follow/unfollow API call
-      console.log("Following/unfollowing user:", userProfile.username);
+      const response = await userService.toggleFollow(userId);
+      console.log("Toggle follow response:", JSON.stringify(response, null, 2));
 
-      // For now, just refetch the profile to simulate the change
-      // In a real app, you'd make an API call here
-      refetch();
+      if (response.success) {
+        await refetch();
+
+        const currentUserResponse = await userService.getUserByIdentifier(
+          currentUser.userName || currentUser.username || ""
+        );
+        if (currentUserResponse.success && currentUserResponse.data) {
+          updateUserProfile({
+            followingCount: currentUserResponse.data.following?.length || 0,
+          });
+        }
+      } else {
+        console.error("Error following/unfollowing user:", response.message);
+      }
     } catch (error) {
       console.error("Error following/unfollowing user:", error);
     }
   };
 
-  // Redirect if trying to view own profile
-  if (currentUser && username === currentUser.username) {
+  if (
+    currentUser &&
+    username === (currentUser.userName || currentUser.username)
+  ) {
     navigate("/profile", { replace: true });
     return null;
   }
@@ -110,7 +123,7 @@ const OtherUserProfilePage: React.FC = () => {
     <OtherUserProfile
       userProfile={userProfile}
       onFollowUser={handleFollowUser}
-      // currentUserAvatar={currentUser?.avatar || currentUser?.profileImage || "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face"}
+      currentUserAvatar={currentUser?.profilePicture}
     />
   );
 };

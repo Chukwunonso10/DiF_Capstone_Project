@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { useState, useEffect } from "react";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { userService, type ApiUser } from "../services/api/userService";
+import { useAuthContext } from "../context/AuthContext";
 
 export interface UserProfileData {
   id: string;
@@ -41,6 +43,7 @@ export const useUserProfile = (username: string): UseUserProfileReturn => {
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user: currentUser } = useAuthContext();
 
   const fetchUserProfile = async () => {
     if (!username) return;
@@ -50,12 +53,11 @@ export const useUserProfile = (username: string): UseUserProfileReturn => {
 
     try {
       const response = await userService.getUserByIdentifier(username);
-      console.log("Original Responsee yuy: ", response.data);
+      console.log("Original Response: ", response.data);
 
       if (response.success && response.data) {
         const apiUser = response.data;
         const transformedUser = userService.transformApiUser(apiUser);
-        console.log("Tranform user details: ", transformedUser);
 
         // Mock data for posts and additional profile info
         // In a real app, you'd fetch this from separate endpoints
@@ -123,18 +125,21 @@ export const useUserProfile = (username: string): UseUserProfileReturn => {
           avatar: transformedUser.avatar,
           bio: transformedUser.bio || "No Bio",
           postsCount: mockPosts.length,
-          followersCount: Math.floor(Math.random() * 1000) + 100,
-          followingCount: Math.floor(Math.random() * 500) + 50,
+          followersCount: apiUser.followers?.length || 0,
+          followingCount: apiUser.following?.length || 0,
           isVerified: Math.random() > 0.7,
           isPrivate: false,
-          isFollowing: false,
+          isFollowing: currentUser?.id
+            ? apiUser.followers?.includes(currentUser.id) ?? false
+            : false,
+
           posts: mockPosts,
           highlights: mockHighlights,
         };
 
         setUserProfile(profileData);
       } else {
-        console.log("Error fetch 1: ", response);
+        console.log("Error fetch: ", response);
         setError(response.message || "Failed to fetch user profile");
       }
     } catch (err) {
@@ -147,7 +152,7 @@ export const useUserProfile = (username: string): UseUserProfileReturn => {
 
   useEffect(() => {
     fetchUserProfile();
-  }, [username]);
+  }, [username, currentUser?.id]);
 
   const refetch = () => {
     fetchUserProfile();

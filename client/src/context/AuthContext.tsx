@@ -39,7 +39,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (token && userStr) {
           const userData = JSON.parse(userStr);
-          setUser(userData);
+          setUser({
+            ...userData,
+            followersCount: userData.followersCount || 0,
+            followingCount: userData.followingCount || 0,
+          });
           setIsAuthenticated(true);
         }
       } catch (error) {
@@ -73,6 +77,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const updatedUser = {
         ...currentUser,
         ...updates,
+        followersCount: updates.followersCount ?? currentUser.followersCount,
+        followingCount: updates.followingCount ?? currentUser.followingCount,
       };
 
       const currentUserStr = JSON.stringify(currentUser);

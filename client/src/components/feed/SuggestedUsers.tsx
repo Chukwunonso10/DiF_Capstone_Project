@@ -1,23 +1,28 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import UserCard from "../user/UserCard/UserCard";
-import { userService, type ApiUser } from "../../services/api/userService";
+import {
+  userService,
+  type ApiUser,
+  type FollowResponse,
+} from "../../services/api/userService";
 import { useAuth } from "../../hooks/useAuth";
+import { useAuthContext } from "../../context/AuthContext";
 
 const SuggestedUsers: React.FC = () => {
   const navigate = useNavigate();
   const [suggestedUsers, setSuggestedUsers] = useState<ApiUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasFetched, setHasFetched] = useState(false);
   const { getCurrentUser } = useAuth();
-  const currentUser = getCurrentUser();
+  const { user: currentUser, updateUserProfile } = useAuthContext();
   const fetchingRef = useRef(false);
 
   const fetchSuggestedUsers = useCallback(async () => {
-    if (fetchingRef.current || hasFetched) {
-      console.log("Skipping fetch - already fetching or fetched");
+    if (fetchingRef.current) {
+      console.log("Skipping fetch - already fetching");
       return;
     }
 
@@ -26,7 +31,6 @@ const SuggestedUsers: React.FC = () => {
       setIsLoading(true);
       setError(null);
 
-      // Check if user is authenticated
       if (!userService.isAuthenticated()) {
         setError("Please log in to view suggested users");
         navigate("/login");
@@ -35,10 +39,8 @@ const SuggestedUsers: React.FC = () => {
 
       console.log("Fetching suggested users...");
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       const response = await userService.getAllUsers();
-      console.log("getAllUsers response:", response);
+      console.log("getAllUsers response:", JSON.stringify(response, null, 2));
 
       if (response.success && (response.users || response.data)) {
         const users = response.users || response.data || [];
@@ -50,17 +52,18 @@ const SuggestedUsers: React.FC = () => {
         );
         console.log("Filtered users:", filtered);
 
-        // Shuffle and take first 5
-        const shuffled = filtered.sort(() => 0.5 - Math.random());
-        const finalUsers = shuffled.slice(0, 5);
-        console.log("Final suggested users:", finalUsers);
-        setSuggestedUsers(finalUsers);
-        setHasFetched(true);
+        if (filtered.length === 0) {
+          setError("No other users available to suggest");
+        } else {
+          const shuffled = filtered.sort(() => 0.5 - Math.random());
+          const finalUsers = shuffled.slice(0, 5);
+          console.log("Final suggested users:", finalUsers);
+          setSuggestedUsers(finalUsers);
+        }
       } else {
         console.error("API response error:", response);
         setError(response.message || "Failed to fetch users");
 
-        // If it's an auth error, redirect to login
         if (
           response.message?.toLowerCase().includes("unauthorized") ||
           response.message?.toLowerCase().includes("authentication")
@@ -74,7 +77,6 @@ const SuggestedUsers: React.FC = () => {
         err instanceof Error ? err.message : "Network error occurred";
       setError(errorMessage);
 
-      // If it's an auth error, redirect to login
       if (
         errorMessage.toLowerCase().includes("unauthorized") ||
         errorMessage.toLowerCase().includes("authentication")
@@ -85,23 +87,43 @@ const SuggestedUsers: React.FC = () => {
       setIsLoading(false);
       fetchingRef.current = false;
     }
-  }, [currentUser?.userName, navigate, hasFetched]);
+  }, [currentUser?.userName, navigate]);
 
-  useEffect(() => {
-    // Only fetch once when component mounts
-    if (!hasFetched && !isLoading) {
-      fetchSuggestedUsers();
+  const handleUserFollow = async (userId: string) => {
+    if (!currentUser) return;
+
+    try {
+      setIsLoading(true);
+      const response = await userService.toggleFollow(userId);
+      console.log("Toggle follow response:", JSON.stringify(response, null, 2));
+
+      if (response.success) {
+        await fetchSuggestedUsers();
+
+        const currentUserResponse = await userService.getUserByIdentifier(
+          currentUser.userName || currentUser.username || ""
+        );
+        if (currentUserResponse.success && currentUserResponse.data) {
+          updateUserProfile({
+            followingCount: currentUserResponse.data.following?.length || 0,
+          });
+        }
+      } else {
+        setError(response.message || "Failed to update follow status");
+      }
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to update follow status"
+      );
+    } finally {
+      setIsLoading(false);
     }
-  }, [fetchSuggestedUsers, hasFetched, isLoading]);
-
-  const handleUserFollow = (userId: string) => {
-    console.log("Follow user:", userId);
-    // Implement follow functionality
   };
 
   const handleSwitchAccount = () => {
     console.log("Switch account");
-    // Implement account switching
   };
 
   const handleSeeAll = () => {
@@ -114,11 +136,14 @@ const SuggestedUsers: React.FC = () => {
   };
 
   const handleRetry = () => {
-    setHasFetched(false);
     setError(null);
     setSuggestedUsers([]);
     fetchSuggestedUsers();
   };
+
+  useEffect(() => {
+    fetchSuggestedUsers();
+  }, [fetchSuggestedUsers]);
 
   if (isLoading) {
     return (
@@ -132,7 +157,6 @@ const SuggestedUsers: React.FC = () => {
 
   return (
     <div className="bg-transparent py-4 ml-[20%]">
-      {/* Current User Section */}
       {currentUser && (
         <div className="flex items-center justify-between mb-12 px-2">
           <div className="flex items-center space-x-4">
@@ -141,7 +165,7 @@ const SuggestedUsers: React.FC = () => {
                 currentUser.profilePicture ||
                 `https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541`
               }
-              alt={currentUser.username}
+              alt={currentUser.userName}
               className="w-16 h-16 rounded-full object-cover"
             />
             <div>
@@ -162,7 +186,6 @@ const SuggestedUsers: React.FC = () => {
         </div>
       )}
 
-      {/* Suggested Users Section */}
       <div className="mb-12">
         <div className="flex items-center justify-between mb-8 px-2">
           <h2 className="text-gray-500 font-semibold text-base">
@@ -196,8 +219,9 @@ const SuggestedUsers: React.FC = () => {
           <div className="space-y-6 px-2">
             {suggestedUsers.map((user) => {
               const transformedUser = userService.transformApiUser(user);
-              console.log("Rendering user:", user);
-              console.log("Transformed user:", transformedUser);
+              const isFollowing = user.followers?.includes(
+                (currentUser as any)?._id
+              );
 
               return (
                 <div
@@ -235,9 +259,12 @@ const SuggestedUsers: React.FC = () => {
                         e.stopPropagation();
                         handleUserFollow(user._id);
                       }}
-                      className="text-blue-500 text-sm font-semibold hover:text-blue-700 transition-colors px-3 py-1"
+                      disabled={isLoading}
+                      className={`text-sm font-semibold transition-colors text-blue-500 hover:text-blue-600 ${
+                        isLoading ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
                     >
-                      Follow
+                      {isFollowing ? "Following" : "Follow"}
                     </button>
                   </div>
                 </div>
@@ -247,7 +274,6 @@ const SuggestedUsers: React.FC = () => {
         )}
       </div>
 
-      {/* Footer Section */}
       <div className="text-sm text-gray-400 leading-relaxed px-2 py-2">
         <div className="flex flex-wrap gap-x-4 gap-y-2 mb-4">
           <span className="hover:text-gray-600 cursor-pointer transition-colors py-1">

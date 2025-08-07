@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// src/components/user/OtherUserProfile/OtherUserProfile.tsx
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserAvatar from "../UserProfile/UserAvatar";
@@ -11,10 +14,11 @@ import OtherUserActions from "./OtherUserActions";
 import MobileBottomNav from "../../common/MobileBottomNav";
 import Sidebar from "../../layout/Sidebar/Sidebar";
 import { type UserProfileData } from "../../../hooks/useUserProfile";
+import { userService } from "../../../services/api/userService";
 
 interface OtherUserProfileProps {
   userProfile: UserProfileData;
-  onFollowUser: () => void;
+  onFollowUser: (userId: string) => void; // Updated to accept userId
   currentUserAvatar?: string;
 }
 
@@ -69,6 +73,10 @@ const OtherUserProfile: React.FC<OtherUserProfileProps> = ({
     // TODO: Navigate to following list
   };
 
+  const handleFollowUser = async () => {
+    onFollowUser(userProfile.id); // Pass the userId to the parent component
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Mobile Layout */}
@@ -107,7 +115,7 @@ const OtherUserProfile: React.FC<OtherUserProfileProps> = ({
 
                 <OtherUserActions
                   isFollowing={userProfile.isFollowing}
-                  onFollow={onFollowUser}
+                  onFollow={handleFollowUser}
                   onMessage={handleMessageUser}
                   onMore={handleMenuClick}
                 />
@@ -196,7 +204,7 @@ const OtherUserProfile: React.FC<OtherUserProfileProps> = ({
 
                     <OtherUserActions
                       isFollowing={userProfile.isFollowing}
-                      onFollow={onFollowUser}
+                      onFollow={handleFollowUser}
                       onMessage={handleMessageUser}
                       onMore={handleMenuClick}
                     />

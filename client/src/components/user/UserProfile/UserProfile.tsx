@@ -1,6 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
+
+import { useUserProfile } from "../../../hooks/useUserProfile";
 
 import Sidebar from "../../layout/Sidebar/Sidebar";
 import ProfileHeader from "../../common/ProfileHeader";
@@ -17,115 +20,28 @@ import { useAuthContext } from "../../../context/AuthContext";
 const defaultProfileImage =
   "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541";
 
-const mockUserData = {
-  username: "jacob_w",
-  displayName: "Jacob West",
-  bio: "Digital goodies designer @pixsellz \nEverything is designed.",
-  postsCount: 147,
-  followersCount: 4541,
-  followingCount: 304,
-  isVerified: false,
-  isFollowing: false,
-  profileImage: defaultProfileImage,
-  posts: [
-    {
-      id: "1",
-      image:
-        "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=400&fit=crop",
-      isVideo: false,
-    },
-    {
-      id: "2",
-      image:
-        "https://images.unsplash.com/photo-1551834369-8d3364b21848?w=400&h=400&fit=crop",
-      isVideo: true,
-    },
-    {
-      id: "3",
-      image:
-        "https://images.unsplash.com/photo-1551963831-b3b1ca40c98e?w=400&h=400&fit=crop",
-      isVideo: false,
-    },
-    {
-      id: "4",
-      image:
-        "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&h=400&fit=crop",
-      isVideo: false,
-    },
-    {
-      id: "5",
-      image:
-        "https://images.unsplash.com/photo-1444418776041-9c7e33cc5a9c?w=400&h=400&fit=crop",
-      isVideo: false,
-    },
-    {
-      id: "6",
-      image:
-        "https://images.unsplash.com/photo-1533827432537-70133748f5c8?w=400&h=400&fit=crop",
-      isVideo: true,
-    },
-    {
-      id: "7",
-      image:
-        "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=400&fit=crop",
-      isVideo: false,
-    },
-    {
-      id: "8",
-      image:
-        "https://images.unsplash.com/photo-1518756131217-31eb79b20e8f?w=400&h=400&fit=crop",
-      isVideo: false,
-    },
-    {
-      id: "9",
-      image:
-        "https://images.unsplash.com/photo-1597645587822-e99fa5d45d25?w=400&h=400&fit=crop",
-      isVideo: false,
-    },
-  ],
-  highlights: [
-    {
-      id: "1",
-      image:
-        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=80&h=80&fit=crop",
-      title: "Travel",
-    },
-    {
-      id: "2",
-      image:
-        "https://images.unsplash.com/photo-1540553016722-983e48a2cd10?w=80&h=80&fit=crop",
-      title: "Food",
-    },
-  ],
-};
-
-const UserProfile = () => {
+const UserProfile: React.FC = () => {
   const navigate = useNavigate();
   const { getCurrentUser } = useAuth();
   const { user, updateUserProfile } = useAuthContext();
   const currentUser = getCurrentUser();
+  const username =
+    user?.userName || user?.username || currentUser?.userName || "";
+
+  const { userProfile, isLoading, error, refetch } = useUserProfile(username);
 
   const [activeTab, setActiveTab] = useState<"posts" | "saved" | "tagged">(
     "posts"
   );
-  const [isFollowing, setIsFollowing] = useState(mockUserData.isFollowing);
   const [showChangePhotoModal, setShowChangePhotoModal] = useState(false);
   const [currentProfileImage, setCurrentProfileImage] = useState("");
-  const [, setIsLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  // Fixed useEffect to prevent infinite loops
   useEffect(() => {
     const userData = user || currentUser;
     const newImage = userData?.profilePicture || defaultProfileImage;
-
-    // Only update if the image has actually changed
     setCurrentProfileImage((prev) => (prev !== newImage ? newImage : prev));
-  }, [user?.profilePicture, currentUser?.profilePicture]); // Only depend on profilePicture
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleFollowClick = () => {
-    setIsFollowing(!isFollowing);
-  };
+  }, [user?.profilePicture, currentUser?.profilePicture]);
 
   const handleBack = () => {
     console.log("Navigate back");
@@ -137,8 +53,6 @@ const UserProfile = () => {
 
   const handleSidebarItemClick = (item: string) => {
     console.log("Sidebar item clicked:", item);
-
-    // Handle navigation from sidebar
     switch (item) {
       case "home":
         navigate("/");
@@ -163,6 +77,11 @@ const UserProfile = () => {
         break;
       case "edit-profile":
         navigate("/edit-profile");
+        break;
+      case "logout":
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        navigate("/login");
         break;
       default:
         console.log(`Navigation for ${item} not implemented`);
@@ -191,56 +110,66 @@ const UserProfile = () => {
 
   const handlePhotoUpload = async (file: File) => {
     try {
-      setIsLoading(true);
-
-      // Create a local URL for the uploaded image
+      setIsUpdating(true);
       const imageUrl = URL.createObjectURL(file);
       setCurrentProfileImage(imageUrl);
-
-      // Update the user profile in context immediately
-      updateUserProfile({
-        profilePicture: imageUrl,
-      });
-
+      updateUserProfile({ profilePicture: imageUrl });
       setShowChangePhotoModal(false);
     } catch (error) {
       console.error("Error uploading photo:", error);
     } finally {
-      setIsLoading(false);
+      setIsUpdating(false);
     }
   };
 
   const handlePhotoRemove = async () => {
     try {
-      setIsLoading(true);
-
-      // Set to default image
+      setIsUpdating(true);
       setCurrentProfileImage(defaultProfileImage);
-
-      // Update the user profile in context immediately
-      updateUserProfile({
-        profilePicture: defaultProfileImage,
-      });
-
+      updateUserProfile({ profilePicture: defaultProfileImage });
       setShowChangePhotoModal(false);
     } catch (error) {
       console.error("Error removing photo:", error);
     } finally {
-      setIsLoading(false);
+      setIsUpdating(false);
     }
   };
 
-  const displayUsername =
-    user?.userName ||
-    user?.username ||
-    currentUser?.userName ||
-    currentUser?.username ||
-    "";
+  if (isLoading || isUpdating || !userProfile) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const displayFullName = user?.fullName || currentUser?.fullName || "";
-  const displayBio = user?.bio || currentUser?.bio || "";
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl text-gray-400 mb-4">😕</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Profile not found
+          </h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => navigate("/")}
+            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+          >
+            Go Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  // Ensure currentProfileImage is never empty
+  const displayUsername = userProfile.username;
+  const displayFullName = userProfile.displayName;
+  const displayBio = userProfile.bio || "";
+
   const safeProfileImage = currentProfileImage || defaultProfileImage;
 
   return (
@@ -269,9 +198,9 @@ const UserProfile = () => {
               <div className="flex-1 ml-6">
                 <div className="mb-4">
                   <ProfileStats
-                    postsCount={mockUserData.postsCount}
-                    followersCount={mockUserData.followersCount}
-                    followingCount={mockUserData.followingCount}
+                    postsCount={userProfile.postsCount}
+                    followersCount={userProfile.followersCount}
+                    followingCount={userProfile.followingCount}
                     layout="horizontal"
                   />
                 </div>
@@ -293,7 +222,7 @@ const UserProfile = () => {
             <ProfileBio displayName={displayFullName} bio={displayBio} />
 
             <StoryHighlights
-              highlights={mockUserData.highlights}
+              highlights={userProfile.highlights}
               canAddNew={true}
               onHighlightClick={handleHighlightClick}
               onAddNew={handleAddHighlight}
@@ -308,7 +237,7 @@ const UserProfile = () => {
 
           <div className="px-0">
             <PostsGrid
-              posts={mockUserData.posts}
+              posts={userProfile.posts}
               onPostClick={handlePostClick}
             />
           </div>
@@ -380,9 +309,9 @@ const UserProfile = () => {
 
                   <div className="mb-8">
                     <ProfileStats
-                      postsCount={mockUserData.postsCount}
-                      followersCount={mockUserData.followersCount}
-                      followingCount={mockUserData.followingCount}
+                      postsCount={userProfile.postsCount}
+                      followersCount={userProfile.followersCount}
+                      followingCount={userProfile.followingCount}
                       layout="vertical"
                     />
                   </div>
@@ -393,7 +322,7 @@ const UserProfile = () => {
 
               <div className="mb-8">
                 <StoryHighlights
-                  highlights={mockUserData.highlights}
+                  highlights={userProfile.highlights}
                   canAddNew={true}
                   onHighlightClick={handleHighlightClick}
                   onAddNew={handleAddHighlight}
@@ -411,7 +340,7 @@ const UserProfile = () => {
 
             <div className="px-8">
               <PostsGrid
-                posts={mockUserData.posts}
+                posts={userProfile.posts}
                 onPostClick={handlePostClick}
               />
             </div>
@@ -419,7 +348,6 @@ const UserProfile = () => {
         </div>
       </div>
 
-      {/* Change Photo Modal */}
       <ChangeProfilePhotoModal
         isOpen={showChangePhotoModal}
         onClose={() => setShowChangePhotoModal(false)}

@@ -130,9 +130,7 @@ export const useSearch = () => {
     isLoading: searchState.isLoading,
     error: searchState.error,
     hasSearched: searchState.hasSearched,
-
     recentSearches,
-
     fetchAllUsers,
     searchUsers,
     addToRecentSearches,

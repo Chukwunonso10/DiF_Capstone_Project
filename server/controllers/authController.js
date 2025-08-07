@@ -21,7 +21,7 @@ const createUser = async (req, res) => {
       return res.status(400).json({ message: "Please enter a valid email address" })
     }
 
-    // Validate phone format if provided
+    // Validate phone format if provided [/^(\+234|0)[789][01]\d{8}$/
     if (phoneNumber && !/^\+?[\d\s-()]+$/.test(phoneNumber)) {
       return res.status(400).json({ message: "Please enter a valid phone number" })
     }
@@ -295,9 +295,9 @@ const toggleFollow =  async (req, res) =>{
   }
 
 const updateProfile = async (req, res) => {
-  try {
-    const { fullName, bio, profilePicture, isPrivate } = req.body
-    const userId = req.user._id
+  try { 
+    const { fullName, bio, profilePicture} = req.body
+    const user = req.user
 
     // Simple validation
     if (fullName && !fullName.trim()) {
@@ -312,9 +312,9 @@ const updateProfile = async (req, res) => {
     if (fullName !== undefined) updateData.fullName = fullName.trim()
     if (bio !== undefined) updateData.bio = bio.trim()
     if (profilePicture !== undefined) updateData.profilePicture = profilePicture
-    if (isPrivate !== undefined) updateData.isPrivate = isPrivate
+    // if (isPrivate !== undefined) updateData.isPrivate = isPrivate
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true }).select(
+    const updatedUser = await User.findByIdAndUpdate(user._id, updateData, { new: true, runValidators: true }).select(
       "-password",
     )
 

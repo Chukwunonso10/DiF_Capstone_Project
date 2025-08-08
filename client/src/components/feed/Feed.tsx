@@ -1,55 +1,98 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import StoryList from "../story/StoryList";
 import PostCard from "../post/PostCard";
-
-const mockPosts = [
-  {
-    id: "1",
-    username: "clarisunique",
-    userAvatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-    location: "Ajah, Lekki, Lagos",
-    timeAgo: "1d",
-    image:
-      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=600&fit=crop",
-    likes: 11,
-    caption: "Swipe and learn 👍👍",
-    comments: 2,
-    isLiked: false,
-    isSaved: false,
-  },
-  {
-    id: "2",
-    username: "johndoe",
-    userAvatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
-    location: "Victoria Island, Lagos",
-    timeAgo: "2h",
-    image:
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop",
-    likes: 25,
-    caption: "Beautiful sunset today! 🌅",
-    comments: 5,
-    isLiked: true,
-    isSaved: false,
-  },
-];
+import { postService } from "../../services/api/postService";
+import { useAuthContext } from "../../context/AuthContext";
+import type { Post } from "../../types/postTypes";
+import CreatePostModal from "../post/CreatePostModal";
 
 const Feed: React.FC = () => {
-  const handlePostLike = (postId: string) => {
-    console.log("Post liked:", postId);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { user } = useAuthContext();
+
+  const fetchPosts = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await postService.getAllPosts();
+      console.log("Fetched Posts:", response); // Debug log
+      if (response.success && response.posts) {
+        setPosts(response.posts);
+      } else {
+        setError(response.message || "Failed to fetch posts");
+      }
+    } catch (err) {
+      setError("An error occurred while fetching posts");
+      console.error("Fetch Posts Error:", err); // Debug log
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handlePostComment = (postId: string, comment: string) => {
-    console.log("Comment added to post:", postId, comment);
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const handlePostLike = async (postId: string) => {
+    if (!user) return;
+    try {
+      const response = await postService.toggleLikePost(postId);
+      if (response.success) {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post._id === postId
+              ? {
+                  ...post,
+                  likes: response.post?.likes || post.likes,
+                }
+              : post
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Error toggling like:", err);
+    }
+  };
+
+  const handlePostComment = async (postId: string, comment: string) => {
+    if (!user) return;
+    try {
+      const response = await postService.createComment({
+        postId,
+        content: comment,
+      });
+      if (response.success && response.comment) {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post._id === postId
+              ? {
+                  ...post,
+                  comments: [...(post.comments || []), response.comment!],
+                }
+              : post
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Error adding comment:", err);
+    }
   };
 
   const handlePostSave = (postId: string) => {
-    console.log("Post saved:", postId);
+    console.log("Post saved:", postId); // Implement save functionality if needed
   };
 
   const handlePostShare = (postId: string) => {
-    console.log("Post shared:", postId);
+    console.log("Post shared:", postId); // Implement share functionality if needed
+  };
+
+  const handlePostCreated = () => {
+    console.log("Post created, refreshing feed"); // Debug log
+    fetchPosts();
   };
 
   return (
@@ -58,18 +101,50 @@ const Feed: React.FC = () => {
         <StoryList />
       </div>
 
+      {isLoading && (
+        <div className="text-center py-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+        </div>
+      )}
+      {error && <p className="text-red-500 text-center">{error}</p>}
+
       <div className="space-y-12">
-        {mockPosts.map((post) => (
+        {posts.map((post) => (
           <PostCard
-            key={post.id}
-            post={post}
+            key={post._id}
+            post={{
+              id: post._id,
+              username: post.user?.userName || "Unknown",
+              userAvatar:
+                post.user?.profilePicture ||
+                "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png",
+              location: "", // Add location if available in API
+              timeAgo: new Date(post.createdAt).toLocaleDateString(), // Simplify for now
+              image: post.media,
+              likes: post.likes.length,
+              caption: post.content || "",
+              comments: post.comments?.length || 0,
+              isLiked: user ? post.likes.includes(user.id) : false,
+              isSaved: user ? post.savedBy.includes(user.id) : false,
+              _id: post._id,
+              content: post.content,
+              tags: post.tags,
+            }}
             onLike={handlePostLike}
             onComment={handlePostComment}
             onSave={handlePostSave}
             onShare={handlePostShare}
+            onDelete={fetchPosts}
+            onUpdate={fetchPosts}
           />
         ))}
       </div>
+
+      <CreatePostModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onPostCreated={handlePostCreated}
+      />
 
       <div className="lg:hidden h-20"></div>
     </div>

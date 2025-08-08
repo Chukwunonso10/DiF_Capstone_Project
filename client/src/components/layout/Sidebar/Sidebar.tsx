@@ -1,8 +1,10 @@
+// src/components/layout/Sidebar.tsx
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import SearchSidebar from "../../common/SearchSidebar";
 import { useAuth } from "../../../hooks/useAuth";
 import { useAuthContext } from "../../../context/AuthContext";
+import CreatePostModal from "../../post/CreatePostModal";
 
 interface SidebarProps {
   activeItem?: string;
@@ -18,18 +20,15 @@ const Sidebar: React.FC<SidebarProps> = ({
   userAvatar,
 }) => {
   const [showSearchSidebar, setShowSearchSidebar] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-
   const { getCurrentUser } = useAuth();
   const currentUser = getCurrentUser();
-
   const { user, setUser, setIsAuthenticated } = useAuthContext();
 
   const defaultAvatar =
     "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541";
-
-  // Ensure we have a safe avatar URL
   const safeUserAvatar =
     userAvatar ||
     user?.profilePicture ||
@@ -168,7 +167,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "create",
       label: "Create",
-      path: "/create",
+      path: "#",
       icon: (
         <svg
           className="w-7 h-7"
@@ -234,31 +233,27 @@ const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const handleLogout = () => {
-    // Remove tokens and user info
     localStorage.removeItem("authToken");
     sessionStorage.removeItem("authToken");
     localStorage.removeItem("user");
     sessionStorage.removeItem("user");
-
-    // Update auth state BEFORE navigating
     setIsAuthenticated(false);
     setUser(null);
-
-    // Now navigate to login
     navigate("/login", { replace: true });
-
     onItemClick?.("logout");
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleItemClick = (itemId: string, path: string) => {
     if (itemId === "search") {
       setShowSearchSidebar(!showSearchSidebar);
+    } else if (itemId === "create") {
+      setShowCreateModal(true);
     } else if (itemId === "more") {
       console.log("More menu clicked");
     } else {
       setShowSearchSidebar(false);
       onItemClick?.(itemId);
+      if (path !== "#") navigate(path);
     }
   };
 
@@ -310,7 +305,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             {menuItems.map((item) => {
               const isActive = getIsActive(item.id, item.path);
 
-              if (item.id === "search") {
+              if (item.id === "search" || item.id === "create") {
                 return (
                   <li key={item.id}>
                     <button
@@ -451,6 +446,15 @@ const Sidebar: React.FC<SidebarProps> = ({
       <SearchSidebar
         isOpen={showSearchSidebar}
         onClose={handleCloseSearchSidebar}
+      />
+
+      <CreatePostModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onPostCreated={() => {
+          setShowCreateModal(false);
+          // Optionally refresh posts here if needed
+        }}
       />
     </>
   );

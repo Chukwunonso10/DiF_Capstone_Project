@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 
-interface InputProps {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   type?: "text" | "email" | "password";
   placeholder?: string;
   value: string;
-  onChange: (value: string) => void;
+  onValueChange?: (value: string) => void; // Renamed from onChange
   onBlur?: () => void;
   error?: string;
   disabled?: boolean;
@@ -16,12 +16,13 @@ const Input: React.FC<InputProps> = ({
   type = "text",
   placeholder,
   value,
-  onChange,
+  onValueChange,
   onBlur,
   error,
   disabled = false,
   className = "",
   showPasswordToggle = false,
+  ...rest
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [, setIsFocused] = useState(false);
@@ -35,7 +36,7 @@ const Input: React.FC<InputProps> = ({
           type={inputType}
           placeholder={placeholder}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onValueChange?.(e.target.value)} // Use onValueChange
           disabled={disabled}
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
@@ -55,6 +56,7 @@ const Input: React.FC<InputProps> = ({
             }
             ${className}
           `}
+          {...rest}
         />
 
         {showPasswordToggle && type === "password" && (

@@ -1,3 +1,4 @@
+// src/components/post/PostActions.tsx
 import React from "react";
 
 interface PostActionsProps {

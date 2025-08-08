@@ -1,7 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// src/components/post/PostCard.tsx
 import React, { useState } from "react";
 import PostActions from "./PostActions";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import PostComments from "./PostComments";
+import EditPostModal from "./EditPostModal";
+import { postService } from "../../services/api/postService";
+import { useAuthContext } from "../../context/AuthContext";
 
 interface Post {
   id: string;
@@ -18,11 +22,13 @@ interface Post {
 }
 
 interface PostCardProps {
-  post: Post;
+  post: Post & { _id?: string; content?: string; tags?: string[] };
   onLike: (postId: string) => void;
   onComment: (postId: string, comment: string) => void;
   onSave: (postId: string) => void;
   onShare: (postId: string) => void;
+  onDelete: () => void;
+  onUpdate: () => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -31,11 +37,16 @@ const PostCard: React.FC<PostCardProps> = ({
   onComment,
   onSave,
   onShare,
+  onDelete,
+  onUpdate,
 }) => {
   const [comment, setComment] = useState("");
   const [isLiked, setIsLiked] = useState(post.isLiked);
   const [isSaved, setIsSaved] = useState(post.isSaved);
   const [likesCount, setLikesCount] = useState(post.likes);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { user } = useAuthContext();
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -59,6 +70,21 @@ const PostCard: React.FC<PostCardProps> = ({
     onShare(post.id);
   };
 
+  const handleDelete = async () => {
+    if (!user || !post._id) return;
+    try {
+      const response = await postService.deletePost(post._id);
+      if (response.success) {
+        onDelete();
+      }
+    } catch (err) {
+      console.error("Error deleting post:", err);
+    }
+  };
+
+  const isOwnPost =
+    user?.userName === post.username || user?.username === post.username;
+
   return (
     <div className="bg-transparent overflow-hidden">
       <div className="flex items-center justify-between py-6">
@@ -77,11 +103,40 @@ const PostCard: React.FC<PostCardProps> = ({
             )}
           </div>
         </div>
-        <button className="text-gray-600 hover:text-gray-800 p-3">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-          </svg>
-        </button>
+        {isOwnPost && (
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="text-gray-600 hover:text-gray-800 p-3"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+              </svg>
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                <button
+                  onClick={() => {
+                    setIsEditModalOpen(true);
+                    setShowMenu(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Edit Post
+                </button>
+                <button
+                  onClick={() => {
+                    handleDelete();
+                    setShowMenu(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                >
+                  Delete Post
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="relative mb-4">
@@ -90,14 +145,6 @@ const PostCard: React.FC<PostCardProps> = ({
           alt="Post"
           className="w-full h-96 object-cover rounded-lg"
         />
-
-        {post.id === "1" && (
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-lg p-4 max-w-xs text-center shadow-lg">
-            <h2 className="text-xl font-bold text-gray-800 leading-tight">
-              What does your C of O Land/Property mean??
-            </h2>
-          </div>
-        )}
       </div>
 
       <PostActions
@@ -147,6 +194,17 @@ const PostCard: React.FC<PostCardProps> = ({
           )}
         </div>
       </div>
+
+      <EditPostModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onPostUpdated={onUpdate}
+        post={{
+          _id: post._id || post.id,
+          content: post.caption,
+          tags: post.tags,
+        }}
+      />
     </div>
   );
 };

@@ -109,7 +109,7 @@ const SignupForm: React.FC = () => {
           type="text"
           placeholder="Mobile Number or Email"
           value={formData.email}
-          onChange={(value) => handleInputChange("email", value)}
+          onValueChange={(value) => handleInputChange("email", value)}
           onBlur={() => handleInputBlur("email")}
           error={touched.email ? errors.email : ""}
           disabled={isLoading}
@@ -119,7 +119,7 @@ const SignupForm: React.FC = () => {
           type="password"
           placeholder="Password"
           value={formData.password}
-          onChange={(value) => handleInputChange("password", value)}
+          onValueChange={(value) => handleInputChange("password", value)}
           onBlur={() => handleInputBlur("password")}
           error={touched.password ? errors.password : ""}
           disabled={isLoading}
@@ -130,7 +130,7 @@ const SignupForm: React.FC = () => {
           type="text"
           placeholder="Full Name"
           value={formData.fullName}
-          onChange={(value) => handleInputChange("fullName", value)}
+          onValueChange={(value) => handleInputChange("fullName", value)}
           onBlur={() => handleInputBlur("fullName")}
           error={touched.fullName ? errors.fullName : ""}
           disabled={isLoading}
@@ -140,7 +140,7 @@ const SignupForm: React.FC = () => {
           type="text"
           placeholder="Username"
           value={formData.username}
-          onChange={(value) => handleInputChange("username", value)}
+          onValueChange={(value) => handleInputChange("username", value)}
           onBlur={() => handleInputBlur("username")}
           error={touched.username ? errors.username : ""}
           disabled={isLoading}

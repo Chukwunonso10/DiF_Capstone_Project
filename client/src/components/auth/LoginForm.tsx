@@ -74,7 +74,7 @@ const LoginForm: React.FC = () => {
           type="text"
           placeholder="Phone number, username, or email"
           value={formData.usernameOrEmail}
-          onChange={(value) => handleInputChange("usernameOrEmail", value)}
+          onValueChange={(value) => handleInputChange("usernameOrEmail", value)}
           onBlur={() => handleInputBlur("usernameOrEmail")}
           error={touched.usernameOrEmail ? errors.usernameOrEmail : ""}
           disabled={isLoading}
@@ -84,7 +84,7 @@ const LoginForm: React.FC = () => {
           type="password"
           placeholder="Password"
           value={formData.password}
-          onChange={(value) => handleInputChange("password", value)}
+          onValueChange={(value) => handleInputChange("password", value)}
           onBlur={() => handleInputBlur("password")}
           error={touched.password ? errors.password : ""}
           disabled={isLoading}
